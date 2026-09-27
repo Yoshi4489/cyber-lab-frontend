@@ -75,7 +75,7 @@ describe("authenticated backend instance adapter", () => {
         method: "POST",
         url: "/v1/instances",
         headers: expect.objectContaining({
-          authorization: `Bearer ${serviceToken}`,
+          authorization: "[redacted]",
           "content-type": "application/json",
           "idempotency-key": "create:instance:0001",
         }),
@@ -84,14 +84,14 @@ describe("authenticated backend instance adapter", () => {
       expect.objectContaining({
         method: "GET",
         url: `/v1/instances/${instanceId}`,
-        headers: expect.objectContaining({ authorization: `Bearer ${serviceToken}` }),
+        headers: expect.objectContaining({ authorization: "[redacted]" }),
         body: "",
       }),
       expect.objectContaining({
         method: "POST",
         url: `/v1/instances/${instanceId}/extend`,
         headers: expect.objectContaining({
-          authorization: `Bearer ${serviceToken}`,
+          authorization: "[redacted]",
           "idempotency-key": "extend:instance:0001",
         }),
         body: "",
@@ -100,7 +100,7 @@ describe("authenticated backend instance adapter", () => {
         method: "DELETE",
         url: `/v1/instances/${instanceId}`,
         headers: expect.objectContaining({
-          authorization: `Bearer ${serviceToken}`,
+          authorization: "[redacted]",
           "idempotency-key": "destroy:instance:0001",
         }),
         body: "",

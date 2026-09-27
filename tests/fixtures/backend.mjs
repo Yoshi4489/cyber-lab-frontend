@@ -1,5 +1,6 @@
 // Loopback-only test double; no lab runtime or credentials are involved.
 import { createServer } from "node:http";
+import { jwtVerify } from "jose";
 
 const correlationId = "d48b142b-4929-44e9-8ac5-153771f475a4";
 const challenge = {
@@ -14,10 +15,27 @@ const challenge = {
   tags: ["http", "intro"],
 };
 
+/**
+ * @param {{
+ *   bffAuthSecret?: string,
+ *   serviceToken?: string,
+ *   serviceTokenSecret?: string,
+ *   serviceTokenIssuer?: string,
+ *   serviceTokenAudience?: string,
+ * }} [options]
+ */
 export function createBackendFixture({
   bffAuthSecret = "",
   serviceToken = "header.payload.signature",
+  serviceTokenSecret,
+  serviceTokenIssuer,
+  serviceTokenAudience,
 } = {}) {
+  const serviceTokenConfig = parseServiceTokenConfig({
+    secret: serviceTokenSecret,
+    issuer: serviceTokenIssuer,
+    audience: serviceTokenAudience,
+  });
   let scenario = "healthy";
   const requests = [];
   const server = createServer(async (request, response) => {
@@ -28,12 +46,17 @@ export function createBackendFixture({
       return;
     }
 
+    if (request.method === "GET" && requestUrl === "/requests") {
+      sendJson(response, 200, { requests });
+      return;
+    }
+
     const body = await readRequestBody(request);
     requests.push({
       method: request.method,
       url: requestUrl,
-      headers: request.headers,
-      body,
+      headers: redactHeaders(request.headers),
+      body: redactBody(requestUrl, body),
     });
 
     if (scenario === "redirect") {
@@ -90,7 +113,8 @@ export function createBackendFixture({
     }
 
     if (requestUrl.startsWith("/v1/instances")) {
-      if (request.headers.authorization !== `Bearer ${serviceToken}`) {
+      const requiredScope = request.method === "GET" ? "instances:read" : "instances:write";
+      if (!(await hasServiceToken(request, requiredScope, serviceToken, serviceTokenConfig))) {
         sendJson(response, 401, {
           code: "UNAUTHORIZED",
           message: "Invalid service token.",
@@ -120,7 +144,14 @@ export function createBackendFixture({
     }
 
     if (request.method === "POST" && requestUrl === "/v1/submissions") {
-      if (request.headers.authorization !== `Bearer ${serviceToken}`) {
+      if (
+        !(await hasServiceToken(
+          request,
+          "submissions:write",
+          serviceToken,
+          serviceTokenConfig,
+        ))
+      ) {
         sendJson(response, 401, {
           code: "UNAUTHORIZED",
           message: "Invalid service token.",
@@ -201,7 +232,7 @@ const resolvedSession = {
     role: "player",
     emailVerified: true,
   },
-  allowedScopes: ["instances:read", "instances:write"],
+  allowedScopes: ["instances:read", "instances:write", "submissions:write"],
   idleExpiresAt: "2026-09-22T00:30:00.000Z",
   absoluteExpiresAt: "2026-12-22T00:00:00.000Z",
 };
@@ -232,8 +263,84 @@ function sendJson(response, status, body) {
   response.writeHead(status, { "Content-Type": "application/json" }).end(JSON.stringify(body));
 }
 
+function parseServiceTokenConfig({ secret, issuer, audience }) {
+  const configured = [secret, issuer, audience].filter(Boolean).length;
+  if (configured === 0) return null;
+  if (configured !== 3 || secret.length < 32) {
+    throw new Error("Fixture service-token configuration is incomplete.");
+  }
+  return { secret, issuer, audience };
+}
+
+async function hasServiceToken(request, requiredScope, fallbackToken, config) {
+  const authorization = request.headers.authorization;
+  if (!authorization?.startsWith("Bearer ")) return false;
+
+  const token = authorization.slice("Bearer ".length);
+  if (!config) return token === fallbackToken;
+
+  try {
+    const { payload, protectedHeader } = await jwtVerify(
+      token,
+      new TextEncoder().encode(config.secret),
+      {
+        algorithms: ["HS256"],
+        issuer: config.issuer,
+        audience: config.audience,
+      },
+    );
+    return (
+      protectedHeader.typ === "JWT" &&
+      payload.sub === resolvedSession.user.id &&
+      payload.sid === resolvedSession.sessionId &&
+      payload.scope === requiredScope
+    );
+  } catch {
+    return false;
+  }
+}
+
+function redactHeaders(headers) {
+  return Object.fromEntries(
+    Object.entries(headers).map(([name, value]) => [
+      name,
+      name === "authorization" ? "[redacted]" : value,
+    ]),
+  );
+}
+
+function redactBody(requestUrl, body) {
+  if (!body) return body;
+
+  let parsed;
+  try {
+    parsed = JSON.parse(body);
+  } catch {
+    return body;
+  }
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return body;
+
+  if (requestUrl === "/v1/auth/login") {
+    if ("email" in parsed) parsed.email = "[redacted]";
+    if ("password" in parsed) parsed.password = "[redacted]";
+  }
+  if (requestUrl === "/v1/auth/session" || requestUrl === "/v1/auth/logout") {
+    if ("sessionToken" in parsed) parsed.sessionToken = "[redacted]";
+  }
+  if (requestUrl === "/v1/submissions" && "flag" in parsed) {
+    parsed.flag = "[redacted]";
+  }
+
+  return JSON.stringify(parsed);
+}
+
 if (process.env.BACKEND_FIXTURE_LISTEN === "true") {
-  const fixture = createBackendFixture();
+  const fixture = createBackendFixture({
+    bffAuthSecret: process.env.BFF_AUTH_SECRET,
+    serviceTokenSecret: process.env.BACKEND_SERVICE_TOKEN_SECRET,
+    serviceTokenIssuer: process.env.SERVICE_TOKEN_ISSUER,
+    serviceTokenAudience: process.env.SERVICE_TOKEN_AUDIENCE,
+  });
   fixture.server.listen(4101, "127.0.0.1");
   process.on("SIGTERM", () => fixture.server.close());
   process.on("SIGINT", () => fixture.server.close());

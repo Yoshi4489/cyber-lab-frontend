@@ -57,10 +57,10 @@ describe("authenticated backend flag-submission adapter", () => {
         method: "POST",
         url: "/v1/submissions",
         headers: expect.objectContaining({
-          authorization: `Bearer ${serviceToken}`,
+          authorization: "[redacted]",
           "content-type": "application/json",
         }),
-        body: JSON.stringify({ challengeId, instanceId, flag }),
+        body: JSON.stringify({ challengeId, instanceId, flag: "[redacted]" }),
       }),
     );
     expect(request?.body).not.toContain('"userId"');

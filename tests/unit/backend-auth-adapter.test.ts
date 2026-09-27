@@ -53,7 +53,7 @@ describe("backend BFF authentication adapter", () => {
     expect(session).toMatchObject({
       sessionId: "943eced9-5a8e-4160-80c5-ef9021aab53f",
       user: { id: "d7c932ea-e0ad-41bb-99e3-b4f9d0971e28", role: "player" },
-      allowedScopes: ["instances:read", "instances:write"],
+      allowedScopes: ["instances:read", "instances:write", "submissions:write"],
     });
 
     const requests = fixture.requests().slice(-3);
@@ -62,25 +62,22 @@ describe("backend BFF authentication adapter", () => {
         method: "POST",
         url: "/v1/auth/login",
         headers: expect.objectContaining({
-          authorization: `Bearer ${bffAuthSecret}`,
+          authorization: "[redacted]",
           "content-type": "application/json",
         }),
-        body: JSON.stringify({
-          email: "learner@example.test",
-          password: "correct-horse-battery-staple",
-        }),
+        body: JSON.stringify({ email: "[redacted]", password: "[redacted]" }),
       }),
       expect.objectContaining({
         method: "POST",
         url: "/v1/auth/session",
-        headers: expect.objectContaining({ authorization: `Bearer ${bffAuthSecret}` }),
-        body: JSON.stringify({ sessionToken }),
+        headers: expect.objectContaining({ authorization: "[redacted]" }),
+        body: JSON.stringify({ sessionToken: "[redacted]" }),
       }),
       expect.objectContaining({
         method: "POST",
         url: "/v1/auth/logout",
-        headers: expect.objectContaining({ authorization: `Bearer ${bffAuthSecret}` }),
-        body: JSON.stringify({ sessionToken }),
+        headers: expect.objectContaining({ authorization: "[redacted]" }),
+        body: JSON.stringify({ sessionToken: "[redacted]" }),
       }),
     ]);
     for (const request of requests) {
