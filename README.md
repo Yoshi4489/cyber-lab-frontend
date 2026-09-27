@@ -18,18 +18,18 @@ The current delivery is a clickable UX mockup with sample data.
   reduced-motion support and keyboard navigation.
 
 **The visible product remains demo-only.** Demo progress lives in this browser.
-The server has same-origin BFF authentication groundwork, but no product page
-uses it yet. Real content, scoring, capacity, and isolated targets remain future
-work in the separate [backend repository](../cyber-range-backend).
+The server has same-origin BFF authentication, lifecycle, and submission routes,
+but no product page uses them yet. Real content, scoring, capacity, and isolated
+targets remain future work in the separate [backend repository](../cyber-range-backend).
 No payments are planned. Public account registration remains closed until the
 security launch gates are complete.
 
 ## Project tracking
 
 Current status: the frontend Phase 1 UX/UI mockup is complete and ready for
-review. Server-only backend contract, authentication, sealed-session, and CSRF
-groundwork are available, but the live backend and lab execution system are not
-connected to the visible product.
+review. Server-only backend contract, authentication, sealed-session, lifecycle,
+submission, and CSRF groundwork are available, but the live backend and lab
+execution system are not connected to the visible product.
 
 ### Done
 
@@ -135,11 +135,18 @@ directly or send an acting user ID. The server-only BFF exposes:
 | `POST /api/auth/login` | Accepts only email and password, performs a BFF-authenticated backend login, and stores an encrypted HttpOnly cookie. |
 | `GET /api/auth/session` | Resolves the sealed cookie server-side and returns only `authenticated`, display name, and verification state. |
 | `POST /api/auth/logout` | Revokes the backend session and clears the cookie. Repeated or expired logout is safe. |
+| `POST /api/instances` | Accepts only `challengeId` plus `Idempotency-Key`; returns `202` with pending lifecycle intent. |
+| `GET /api/instances/:id` | Polls an owned instance with `instances:read`. The target URL is absent until the backend reports `running`. |
+| `POST /api/instances/:id/extend` | Requires an empty body, `instances:write`, and `Idempotency-Key`; returns `202`. |
+| `DELETE /api/instances/:id` | Requires an empty body, `instances:write`, and `Idempotency-Key`; returns `202`. |
+| `POST /api/submissions` | Accepts only `challengeId`, `instanceId`, and `flag`; uses `submissions:write` and returns scoring metadata without echoing the flag. |
 
-`POST` routes require an explicit same-origin `Origin` header and reject
-cross-origin browser requests. All BFF responses use `Cache-Control: no-store`.
-The opaque backend session token, backend user ID, role, and scopes never reach
-browser JavaScript through these routes. Public signup is still disabled.
+All state-changing BFF routes require an explicit same-origin `Origin` header
+and reject cross-origin browser requests. All BFF responses use
+`Cache-Control: no-store`. Frontend code must create one idempotency key per
+logical instance mutation and reuse it for retries. The opaque backend session
+token, backend user ID, role, and scopes never reach browser JavaScript through
+these routes. Public signup is still disabled.
 
 To enable the BFF routes in a deployed frontend, set these server-only values
 in the host's secret manager (never in `NEXT_PUBLIC_*` variables):
@@ -149,7 +156,7 @@ in the host's secret manager (never in `NEXT_PUBLIC_*` variables):
 | `BACKEND_URL` | Credential-free backend API origin; production requires HTTPS outside loopback. |
 | `BFF_AUTH_SECRET` | Shared backend bootstrap credential for login, session resolution, and logout. |
 | `BFF_SESSION_SECRET` | Independent frontend-only secret, at least 32 characters, used to encrypt the HttpOnly cookie value. Rotating it invalidates browser sessions. |
-| `BACKEND_SERVICE_TOKEN_SECRET`, `SERVICE_TOKEN_ISSUER`, `SERVICE_TOKEN_AUDIENCE` | Separate configuration for future short-lived, scoped user-operation tokens. |
+| `BACKEND_SERVICE_TOKEN_SECRET`, `SERVICE_TOKEN_ISSUER`, `SERVICE_TOKEN_AUDIENCE` | Separate configuration for short-lived, scoped lifecycle and submission tokens. |
 
 See [`.env.example`](.env.example) for names only. Do not add a real `.env`
 file, token, certificate, or flag to Git.
