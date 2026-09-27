@@ -121,7 +121,7 @@ responsive navigation, keyboard focus, and the unchanged backend HTTP boundary.
 ## Current Status
 
 * Phase 0 - Architecture research and repository split documented
-* Phase 1 - In progress: frontend preview implemented
+* Phase 1 - In progress: frontend preview and server-only BFF groundwork implemented
 * Phase 2 - Not started
 * Phase 3 - Not started
 * Phase 4 - Not started
@@ -141,16 +141,27 @@ daily goal, and topic progress; simulated start/stop/expiry/finish/replay; ficti
 global leaderboard; clear Learning Paths/Profile previews; system/light/dark
 themes; desktop/tablet layouts; demo guide and explicit local reset.
 
-All demo state remains in the browser. No real account, target, flag verification,
-or backend scoring exists. The optional backend health check is still server-only
-and does not enable labs. All 54 browser cases passed across desktop, tablet, and
-mobile during UX verification, together with lint, type checks, and a production
-build. Feature groups are pushed separately with GitHub CI between them.
+All demo state remains in the browser. No real account is exposed through the
+visible product, and no live target, target URL, flag verification, or backend
+score is presented as demo data. The optional backend health check is still
+server-only and does not enable labs. All 54 browser cases passed across desktop,
+tablet, and mobile during UX verification, together with lint, type checks, and a
+production build. Feature groups are pushed separately with GitHub CI between them.
 
-Next platform work is the versioned catalog contract, validated live responses,
-server authentication and email verification, then authorized lifecycle commands.
-These are future platform phases, not unfinished mockup interactions. Never
-infer backend readiness from `/healthz` alone.
+Server-only BFF groundwork is complete for a future live product: generated
+OpenAPI types and response validation; encrypted HttpOnly backend-session
+cookies; same-origin mutation checks; short-lived scoped service tokens; strict
+instance creation, polling, extension, and destruction routes; and strict flag
+submission. These routes are no-store, never accept an acting user ID from the
+browser, require the browser to retain an idempotency key for each instance
+mutation, and reveal a target URL only after the backend reports `running`.
+They do not connect the demo, authorize demo state, or make the preview a live
+platform.
+
+Next platform work is a backend contract release and deployed BFF preflight,
+followed by a deliberately separate real-auth and live-product UI decision. The
+demo must not become a substitute authorization interface. Never infer backend
+or launch readiness from `/healthz` alone.
 
 ## 1. Technical Architecture & Stack
 

@@ -52,19 +52,21 @@ execution system are not connected to the visible product.
 
 - [ ] Review the Phase 1 mockup and record any UX changes before backend
   integration begins.
-- [ ] Keep the frontend demo stable while the separate backend design and API
-  contract are prepared.
+- [ ] Verify a released backend contract and deployed BFF configuration without
+  exposing a live product in the demo.
+- [ ] Keep the frontend demo stable while the separate backend and launch
+  controls are completed.
 
 ### Planned next
 
-- [ ] Define the shared API contract between this frontend and
-  `../cyber-range-backend`.
-- [ ] Add real authentication and protected user accounts after the required
-  security controls are complete.
-- [ ] Replace browser-only demo progress with backend-backed learner progress.
-- [ ] Connect the catalog and lab session screens to live backend data.
-- [ ] Implement secure lab instance creation, ownership checks, status updates,
-  expiry, and destruction through the backend.
+- [ ] Release the backend contract and run the HTTPS-only contract-freshness
+  check against `GET /v1/openapi.json`.
+- [ ] Configure the BFF's server-only deployment secrets and verify its
+  authenticated session path with a non-public test account.
+- [ ] Decide and build a real authentication and live-product UI that is
+  distinct from browser-local demo onboarding and simulation.
+- [ ] Replace browser-only catalog, learner progress, and leaderboard views
+  only after the relevant backend data and security controls are ready.
 
 ### Still left for the full platform
 
@@ -186,7 +188,7 @@ can lose that temporary state. No demo value grants server access.
 | `src/features/learner/` | Validated demo state and onboarding |
 | `src/features/dashboard/`, `session/`, `leaderboard/` | Progress, simulated lifecycle, fictional rankings |
 | `src/features/landing/`, `preview/`, `guide/` | Guest entry, future-page previews, demo help |
-| `src/features/backend/` | Optional server-only health adapter and maintainer UI |
+| `src/features/backend/` | Server-only backend adapters, BFF authorization, and maintainer status UI |
 | `src/components/ui/`, `src/styles/` | Small shared primitives, theme tokens, loading states |
 | `tests/e2e/`, `tests/fixtures/` | Browser flows and loopback-only backend fixture |
 | `.github/workflows/frontend.yml` | Lint, types, build, and browser checks on main/develop pushes |
@@ -218,6 +220,19 @@ See `AGENTS.md` for commit conventions.
 The optional maintainer check is under **Demo guide → Maintainer tools**.
 Set `BACKEND_URL` using the existing environment example if needed. The
 server checks only `/healthz`; API availability does not enable lab execution.
+
+### Deployed BFF preflight
+
+Before enabling a deployed BFF, set the documented server-only values in the
+host secret manager, confirm that its bootstrap credential and service-token
+configuration match the backend, and use a non-public test account to verify
+login, session resolution, and logout. Then run the **Backend contract
+freshness** workflow with the released HTTPS backend origin. It compares the
+committed generated types with `GET /v1/openapi.json` without rewriting files.
+
+Do not use this preflight to create a live target until the backend's Phase 3
+launch controls are complete. The frontend repository has no deployment secret,
+backend URL, or authority to run that environment-specific check.
 
 ## Canonical documentation
 
