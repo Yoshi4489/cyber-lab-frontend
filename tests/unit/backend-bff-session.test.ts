@@ -25,6 +25,7 @@ import {
   readBackendSessionCookie,
   setBackendSessionCookie,
 } from "../../src/features/backend/bff-session";
+import { BackendSessionCookieConfigurationError } from "../../src/features/backend/session-cookie";
 
 const originalBffSessionSecret = process.env.BFF_SESSION_SECRET;
 const payload = {
@@ -71,6 +72,16 @@ describe("BFF backend session cookie", () => {
     await expect(readBackendSessionCookie()).resolves.toBeNull();
     expect(cookieStore.delete).toHaveBeenCalledWith(BACKEND_SESSION_COOKIE);
     expect(cookieJar.has(BACKEND_SESSION_COOKIE)).toBe(false);
+  });
+
+  it("surfaces a missing session-sealing configuration without deleting the cookie", async () => {
+    cookieJar.set(BACKEND_SESSION_COOKIE, "a-sealed-value");
+    delete process.env.BFF_SESSION_SECRET;
+
+    await expect(readBackendSessionCookie()).rejects.toBeInstanceOf(
+      BackendSessionCookieConfigurationError,
+    );
+    expect(cookieStore.delete).not.toHaveBeenCalled();
   });
 
   it("requires HTTPS cookie transport in production", async () => {

@@ -26,6 +26,13 @@ export class BackendSessionCookieError extends Error {
   }
 }
 
+export class BackendSessionCookieConfigurationError extends BackendSessionCookieError {
+  constructor() {
+    super("Backend session cookie configuration is invalid.");
+    this.name = "BackendSessionCookieConfigurationError";
+  }
+}
+
 /**
  * Encrypts the opaque backend credential before a future BFF route stores it
  * in an HttpOnly cookie. The browser never receives the decrypted token.
@@ -69,7 +76,7 @@ async function sessionEncryptionKey(): Promise<Uint8Array> {
     BFF_SESSION_SECRET: process.env.BFF_SESSION_SECRET,
   });
   if (!config.success) {
-    throw new BackendSessionCookieError("Backend session cookie configuration is invalid.");
+    throw new BackendSessionCookieConfigurationError();
   }
 
   return new Uint8Array(

@@ -1,6 +1,7 @@
 import { decodeProtectedHeader } from "jose";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
+  BackendSessionCookieConfigurationError,
   BackendSessionCookieError,
   sealBackendSession,
   unsealBackendSession,
@@ -63,9 +64,9 @@ describe("backend session cookie", () => {
     ).rejects.toBeInstanceOf(BackendSessionCookieError);
 
     delete process.env.BFF_SESSION_SECRET;
-    await expect(unsealBackendSession("not-a-sealed-session")).rejects.toBeInstanceOf(
-      BackendSessionCookieError,
-    );
+    await expect(
+      unsealBackendSession("not-a-sealed-session"),
+    ).rejects.toBeInstanceOf(BackendSessionCookieConfigurationError);
   });
 });
 

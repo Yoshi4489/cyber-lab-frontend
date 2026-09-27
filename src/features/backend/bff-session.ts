@@ -1,6 +1,7 @@
 import "server-only";
 import { cookies } from "next/headers";
 import {
+  BackendSessionCookieConfigurationError,
   BackendSessionCookieError,
   sealBackendSession,
   unsealBackendSession,
@@ -37,6 +38,7 @@ export async function readBackendSessionCookie(): Promise<BackendSessionCookiePa
   try {
     return await unsealBackendSession(sealedSession);
   } catch (error) {
+    if (error instanceof BackendSessionCookieConfigurationError) throw error;
     if (!(error instanceof BackendSessionCookieError)) throw error;
     cookieStore.delete(BACKEND_SESSION_COOKIE);
     return null;
