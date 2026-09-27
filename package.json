@@ -10,6 +10,7 @@
     "lint": "eslint .",
     "typecheck": "next typegen && tsc --noEmit",
     "test:unit": "vitest run",
+    "test:bff": "node scripts/test-bff-smoke.mjs",
     "test:e2e": "playwright test"
   },
   "engines": {
