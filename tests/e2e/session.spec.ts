@@ -10,6 +10,23 @@ async function enter(page: Page) {
   await expect(page.getByRole("timer")).toBeVisible();
 }
 
+async function sessionExpiry(page: Page, slug: string) {
+  return page.evaluate(
+    ({ storageKey, sessionSlug }) => {
+      const stored = window.localStorage.getItem(storageKey);
+      const learner = JSON.parse(stored ?? "null") as {
+        sessions?: Record<string, { expiresAt?: unknown }>;
+      } | null;
+      const expiresAt = learner?.sessions?.[sessionSlug]?.expiresAt;
+      if (typeof expiresAt !== "number") {
+        throw new Error("Expected a persisted demo session expiry");
+      }
+      return expiresAt;
+    },
+    { storageKey: "ciscoku:learner:v1", sessionSlug: slug },
+  );
+}
+
 test("guest can start a demo, finish, and replay without duplicate XP", async ({
   page,
 }) => {
@@ -56,9 +73,10 @@ test("countdown survives refresh and expired demos award no XP", async ({
   await page.clock.install();
   await enter(page);
   await page.clock.fastForward(61_000);
-  const before = await page.getByRole("timer").innerText();
+  const before = await sessionExpiry(page, "cookie-monster");
   await page.reload();
-  await expect(page.getByRole("timer")).toHaveText(before);
+  await expect(page.getByRole("timer")).toBeVisible();
+  expect(await sessionExpiry(page, "cookie-monster")).toBe(before);
   await page.clock.fastForward(25 * 60_000);
   await expect(
     page.getByRole("heading", { name: "Time for a fresh start." }),
