@@ -43,8 +43,9 @@ execution system are not connected to the visible product.
 - [x] Added preview pages for future Learning Paths and Profile areas.
 - [x] Split the frontend into feature folders with thin App Router entry points.
 - [x] Updated the canonical project documentation and frontend security boundary.
-- [x] Added CI and verified lint, typecheck, build, and 54 Playwright scenarios
-  across desktop, tablet, and mobile layouts.
+- [x] Added CI and verified lint, typecheck, 56 unit tests, a production build,
+  the protected BFF smoke flow, and 54 Playwright scenarios across desktop,
+  tablet, and mobile layouts.
 - [x] Pushed the work to the `develop` branch of the frontend repository in
   small logical commits.
 
@@ -205,14 +206,18 @@ challenge internals.
 ```powershell
 npm run lint
 npm run typecheck
+npm run test:unit
 npm run build
+npm run test:bff
 npx playwright install chromium
 npm run test:e2e
 ```
 
-Playwright runs Chrome desktop, tablet, and mobile scenarios. It starts local
-test services on ports 3100 and 4101. It never starts real targets or contacts
-your configured backend. CI runs the same gates and uploads failure reports.
+Run `test:bff` after `build`. It starts the built frontend and a loopback backend
+on temporary ports, exercises the sealed-session lifecycle and submission path,
+then terminates both. Playwright runs Chrome desktop, tablet, and mobile scenarios
+using ports 3100 and 4101. Neither check starts real targets or contacts your
+configured backend. CI runs the same gates and uploads browser failure reports.
 
 Push one logical group, wait for its CI result, then continue. Keep refactors,
 formatting, dependency changes, and features in separate commits.

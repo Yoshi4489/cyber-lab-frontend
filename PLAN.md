@@ -145,8 +145,9 @@ All demo state remains in the browser. No real account is exposed through the
 visible product, and no live target, target URL, flag verification, or backend
 score is presented as demo data. The optional backend health check is still
 server-only and does not enable labs. All 54 browser cases passed across desktop,
-tablet, and mobile during UX verification, together with lint, type checks, and a
-production build. Feature groups are pushed separately with GitHub CI between them.
+tablet, and mobile during UX verification, together with 56 unit tests, lint, type
+checks, a production build, and a post-build loopback BFF smoke test. Feature groups
+are pushed separately with GitHub CI between them.
 
 Server-only BFF groundwork is complete for a future live product: generated
 OpenAPI types and response validation; encrypted HttpOnly backend-session
@@ -156,7 +157,8 @@ submission. These routes are no-store, never accept an acting user ID from the
 browser, require the browser to retain an idempotency key for each instance
 mutation, and reveal a target URL only after the backend reports `running`.
 They do not connect the demo, authorize demo state, or make the preview a live
-platform.
+platform. CI exercises the complete protected BFF path against a loopback-only
+backend fixture without using deployment credentials or creating a target.
 
 Next platform work is a backend contract release and deployed BFF preflight,
 followed by a deliberately separate real-auth and live-product UI decision. The
