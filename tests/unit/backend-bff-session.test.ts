@@ -86,11 +86,23 @@ describe("BFF backend session cookie", () => {
 
   it("requires HTTPS cookie transport in production", async () => {
     vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("BFF_PUBLIC_ORIGIN", "https://lab.ciscoku.test");
 
     await setBackendSessionCookie(payload);
 
     expect(cookieStore.set).toHaveBeenCalledWith(
       expect.objectContaining({ secure: true }),
+    );
+  });
+
+  it("allows an HTTP cookie only for a configured production loopback origin", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("BFF_PUBLIC_ORIGIN", "http://127.0.0.1:3100");
+
+    await setBackendSessionCookie(payload);
+
+    expect(cookieStore.set).toHaveBeenCalledWith(
+      expect.objectContaining({ secure: false }),
     );
   });
 

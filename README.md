@@ -156,6 +156,7 @@ in the host's secret manager (never in `NEXT_PUBLIC_*` variables):
 | Variable | Purpose |
 |---|---|
 | `BACKEND_URL` | Credential-free backend API origin; production requires HTTPS outside loopback. |
+| `BFF_PUBLIC_ORIGIN` | Exact browser-facing frontend origin used for mutation-origin validation; production requires HTTPS outside loopback. |
 | `BFF_AUTH_SECRET` | Shared backend bootstrap credential for login, session resolution, and logout. |
 | `BFF_SESSION_SECRET` | Independent frontend-only secret, at least 32 characters, used to encrypt the HttpOnly cookie value. Rotating it invalidates browser sessions. |
 | `BACKEND_SERVICE_TOKEN_SECRET`, `SERVICE_TOKEN_ISSUER`, `SERVICE_TOKEN_AUDIENCE` | Separate configuration for short-lived, scoped lifecycle and submission tokens. |

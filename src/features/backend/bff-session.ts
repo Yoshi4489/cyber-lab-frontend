@@ -22,7 +22,7 @@ export async function setBackendSessionCookie(
     name: BACKEND_SESSION_COOKIE,
     value: await sealBackendSession(session),
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: sessionCookieRequiresHttps(),
     sameSite: "lax",
     path: "/",
     priority: "high",
@@ -47,4 +47,18 @@ export async function readBackendSessionCookie(): Promise<BackendSessionCookiePa
 
 export async function clearBackendSessionCookie(): Promise<void> {
   (await cookies()).delete(BACKEND_SESSION_COOKIE);
+}
+
+function sessionCookieRequiresHttps(): boolean {
+  if (process.env.NODE_ENV !== "production") return false;
+
+  const configured = process.env.BFF_PUBLIC_ORIGIN;
+  if (!configured) return true;
+  try {
+    const publicUrl = new URL(configured);
+    const loopbackHosts = new Set(["localhost", "127.0.0.1", "[::1]"]);
+    return publicUrl.protocol !== "http:" || !loopbackHosts.has(publicUrl.hostname);
+  } catch {
+    return true;
+  }
 }
