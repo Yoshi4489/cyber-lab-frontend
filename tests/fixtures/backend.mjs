@@ -119,6 +119,24 @@ export function createBackendFixture({
       }
     }
 
+    if (request.method === "POST" && requestUrl === "/v1/submissions") {
+      if (request.headers.authorization !== `Bearer ${serviceToken}`) {
+        sendJson(response, 401, {
+          code: "UNAUTHORIZED",
+          message: "Invalid service token.",
+          correlationId,
+        });
+        return;
+      }
+      sendJson(response, 200, {
+        correct: true,
+        points: 100,
+        recorded: true,
+        source: "database",
+      });
+      return;
+    }
+
     if (requestUrl === "/healthz") {
       sendJson(response, 200, { status: "ok" });
       return;
