@@ -17,8 +17,9 @@ The current delivery is a clickable UX mockup with sample data.
 - System, light, and dark themes; desktop and tablet layouts; mobile fallback;
   reduced-motion support and keyboard navigation.
 
-**No real account or lab is created.** Demo progress lives in this browser.
-Real authentication, content, scoring, capacity, and isolated targets are future
+**The visible product remains demo-only.** Demo progress lives in this browser.
+The server has same-origin BFF authentication groundwork, but no product page
+uses it yet. Real content, scoring, capacity, and isolated targets remain future
 work in the separate [backend repository](../cyber-range-backend).
 No payments are planned. Public account registration remains closed until the
 security launch gates are complete.
@@ -26,8 +27,9 @@ security launch gates are complete.
 ## Project tracking
 
 Current status: the frontend Phase 1 UX/UI mockup is complete and ready for
-review. This repository is currently in a frontend handoff state; the live
-backend and lab execution system are not connected.
+review. Server-only backend contract, authentication, sealed-session, and CSRF
+groundwork are available, but the live backend and lab execution system are not
+connected to the visible product.
 
 ### Done
 
@@ -122,6 +124,35 @@ not match `GET /v1/openapi.json` and never rewrites files. Full automatic
 cross-repository enforcement requires the backend release workflow to dispatch
 this check (or publish a contract endpoint/artifact); this frontend repository
 does not assume a deployment URL or import backend source.
+
+### BFF authentication
+
+The browser must use the same-origin frontend BFF; it must never call the backend
+directly or send an acting user ID. The server-only BFF exposes:
+
+| Endpoint | Behavior |
+|---|---|
+| `POST /api/auth/login` | Accepts only email and password, performs a BFF-authenticated backend login, and stores an encrypted HttpOnly cookie. |
+| `GET /api/auth/session` | Resolves the sealed cookie server-side and returns only `authenticated`, display name, and verification state. |
+| `POST /api/auth/logout` | Revokes the backend session and clears the cookie. Repeated or expired logout is safe. |
+
+`POST` routes require an explicit same-origin `Origin` header and reject
+cross-origin browser requests. All BFF responses use `Cache-Control: no-store`.
+The opaque backend session token, backend user ID, role, and scopes never reach
+browser JavaScript through these routes. Public signup is still disabled.
+
+To enable the BFF routes in a deployed frontend, set these server-only values
+in the host's secret manager (never in `NEXT_PUBLIC_*` variables):
+
+| Variable | Purpose |
+|---|---|
+| `BACKEND_URL` | Credential-free backend API origin; production requires HTTPS outside loopback. |
+| `BFF_AUTH_SECRET` | Shared backend bootstrap credential for login, session resolution, and logout. |
+| `BFF_SESSION_SECRET` | Independent frontend-only secret, at least 32 characters, used to encrypt the HttpOnly cookie value. Rotating it invalidates browser sessions. |
+| `BACKEND_SERVICE_TOKEN_SECRET`, `SERVICE_TOKEN_ISSUER`, `SERVICE_TOKEN_AUDIENCE` | Separate configuration for future short-lived, scoped user-operation tokens. |
+
+See [`.env.example`](.env.example) for names only. Do not add a real `.env`
+file, token, certificate, or flag to Git.
 
 ### Demo state
 
