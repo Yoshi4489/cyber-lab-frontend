@@ -14,7 +14,10 @@ const challenge = {
   tags: ["http", "intro"],
 };
 
-export function createBackendFixture({ bffAuthSecret = "" } = {}) {
+export function createBackendFixture({
+  bffAuthSecret = "",
+  serviceToken = "header.payload.signature",
+} = {}) {
   let scenario = "healthy";
   const requests = [];
   const server = createServer(async (request, response) => {
@@ -58,6 +61,11 @@ export function createBackendFixture({ bffAuthSecret = "" } = {}) {
       return;
     }
 
+    if (scenario === "instance-url-before-running" && requestUrl.startsWith("/v1/instances/")) {
+      sendJson(response, 200, { ...pendingInstance, url: "https://lab.example.test" });
+      return;
+    }
+
     if (request.method === "POST" && requestUrl.startsWith("/v1/auth/")) {
       if (request.headers.authorization !== `Bearer ${bffAuthSecret}`) {
         sendJson(response, 401, {
@@ -77,6 +85,36 @@ export function createBackendFixture({ bffAuthSecret = "" } = {}) {
       }
       if (requestUrl === "/v1/auth/logout") {
         response.writeHead(204).end();
+        return;
+      }
+    }
+
+    if (requestUrl.startsWith("/v1/instances")) {
+      if (request.headers.authorization !== `Bearer ${serviceToken}`) {
+        sendJson(response, 401, {
+          code: "UNAUTHORIZED",
+          message: "Invalid service token.",
+          correlationId,
+        });
+        return;
+      }
+      if (request.method === "POST" && requestUrl === "/v1/instances") {
+        sendJson(response, 202, instanceMutation);
+        return;
+      }
+      if (request.method === "GET" && requestUrl === `/v1/instances/${pendingInstance.id}`) {
+        sendJson(response, 200, pendingInstance);
+        return;
+      }
+      if (
+        request.method === "POST" &&
+        requestUrl === `/v1/instances/${pendingInstance.id}/extend`
+      ) {
+        sendJson(response, 202, instanceMutation);
+        return;
+      }
+      if (request.method === "DELETE" && requestUrl === `/v1/instances/${pendingInstance.id}`) {
+        sendJson(response, 202, instanceMutation);
         return;
       }
     }
@@ -148,6 +186,22 @@ const resolvedSession = {
   allowedScopes: ["instances:read", "instances:write"],
   idleExpiresAt: "2026-09-22T00:30:00.000Z",
   absoluteExpiresAt: "2026-12-22T00:00:00.000Z",
+};
+const pendingInstance = {
+  id: "7850ac98-88b2-4d2f-953d-3f2d5b204205",
+  challengeId: challenge.id,
+  status: "pending",
+  createdAt: "2026-09-22T00:00:00.000Z",
+  startedAt: null,
+  expiresAt: "2026-09-22T01:00:00.000Z",
+  absoluteExpiresAt: "2026-09-22T02:00:00.000Z",
+  stoppedAt: null,
+  failureCode: null,
+};
+const instanceMutation = {
+  instance: pendingInstance,
+  operationId: "9c690217-87af-4d5c-a3ac-f7d5be946b4d",
+  replayed: false,
 };
 
 async function readRequestBody(request) {
