@@ -165,13 +165,31 @@ async function verifyBff(frontendOrigin) {
     JSON.stringify({ challengeId, instanceId, flag: "[redacted]" }),
   );
 
+  const beforeLogout = fixture.requests().length;
   const logout = await request("/api/auth/logout", {
     method: "POST",
     headers: mutationHeaders(frontendOrigin, cookie, false),
   });
   assert.equal(logout.status, 204);
   assert.equal(logout.headers.get("cache-control"), "no-store");
-  assert.ok(logout.headers.get("set-cookie")?.includes("ciscoku.backend-session="));
+
+  assert.equal(fixture.requests().length, beforeLogout + 1);
+  const revocation = fixture.requests().at(-1);
+  assert.equal(revocation?.method, "POST");
+  assert.equal(revocation?.url, "/v1/auth/logout");
+  assert.equal(revocation?.body, JSON.stringify({ sessionToken: "[redacted]" }));
+
+  const clearedCookie = logout.headers.get("set-cookie");
+  assert.ok(clearedCookie, "Logout must clear the sealed session cookie.");
+  const [clearedPair, ...clearedAttributes] = clearedCookie.split(";");
+  assert.equal(clearedPair.trim(), "ciscoku.backend-session=");
+  assert.match(clearedAttributes.join(";"), /Expires=Thu, 01 Jan 1970|Max-Age=0/i);
+
+  const afterLogout = await request("/api/auth/session", {
+    headers: { Cookie: clearedPair.trim() },
+  });
+  assert.deepEqual(await expectJson(afterLogout, 200), { authenticated: false });
+  assert.equal(fixture.requests().length, beforeLogout + 1);
 }
 
 function mutationHeaders(origin, cookie, hasJsonBody, idempotencyKey) {
