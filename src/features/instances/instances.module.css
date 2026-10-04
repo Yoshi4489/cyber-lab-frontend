@@ -1,0 +1,183 @@
+.page {
+  max-width: 800px;
+  margin: 0 auto;
+}
+.warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px 16px;
+  margin-bottom: 26px;
+  border: 1px solid var(--amber);
+  border-radius: 14px;
+  background: var(--soft-amber);
+  color: var(--amber);
+  font-size: 12px;
+  line-height: 1.7;
+}
+.warning svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.page header {
+  margin-bottom: 30px;
+}
+.page h1 {
+  font-size: 36px;
+  letter-spacing: -1.2px;
+  margin: 12px 0;
+}
+.page header > p:last-child {
+  color: var(--muted-foreground);
+  line-height: 1.8;
+}
+.panel {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 32px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--card);
+}
+.top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  margin-bottom: 26px;
+}
+.icon {
+  padding: 14px;
+  display: grid;
+  place-items: center;
+  border-radius: 16px;
+  color: var(--primary);
+  background: var(--soft-green);
+}
+.status {
+  border: 1px solid var(--green-border);
+  padding: 7px 12px;
+  border-radius: 20px;
+  color: var(--primary);
+  font-size: 12px;
+  font-family: var(--font-geist-mono);
+}
+.panel h2 {
+  font-size: 26px;
+  letter-spacing: -0.8px;
+}
+/* Only the unclassed description paragraph; .help, .operation, and .error
+   each keep their own colour and spacing. */
+.panel > p:not([class]) {
+  color: var(--muted-foreground);
+  line-height: 1.85;
+  margin: 14px 0 24px;
+}
+.panel label {
+  display: block;
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+.help {
+  font-size: 11px;
+  color: var(--muted-foreground);
+  margin: 8px 0 20px;
+}
+.timer {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: var(--soft-green);
+  border: 1px solid var(--green-border);
+  padding: 20px;
+  border-radius: 14px;
+  margin: 22px 0;
+  color: var(--primary);
+}
+.timer div {
+  flex: 1;
+}
+.timer span {
+  font-size: 11px;
+}
+.timer strong {
+  display: block;
+  font-size: 34px;
+  font-family: var(--font-geist-mono);
+  font-weight: 500;
+  margin-top: 4px;
+}
+.details {
+  margin: 22px 0;
+  display: grid;
+  gap: 16px;
+}
+.details div {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  font-size: 12px;
+  flex-wrap: wrap;
+}
+.details dt {
+  color: var(--muted-foreground);
+}
+.details dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-family: var(--font-geist-mono);
+}
+.details a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--primary);
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 26px;
+  padding-top: 26px;
+  border-top: 1px solid var(--border);
+}
+.operation {
+  font-size: 11px;
+  color: var(--muted-foreground);
+  margin-top: 18px;
+  min-height: 16px;
+}
+.error {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 14px;
+  padding: 14px 16px;
+  border: 1px solid var(--danger);
+  border-radius: 14px;
+  color: var(--danger);
+  font-size: 12px;
+  line-height: 1.7;
+}
+.error svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.error code {
+  font-family: var(--font-geist-mono);
+  font-size: 11px;
+}
+@media (max-width: 600px) {
+  .panel {
+    padding: 22px;
+  }
+  .page h1 {
+    font-size: 29px;
+  }
+  .timer {
+    padding: 16px;
+  }
+  .actions button {
+    width: 100%;
+  }
+}
