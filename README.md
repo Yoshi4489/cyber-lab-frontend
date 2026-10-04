@@ -43,9 +43,11 @@ execution system are not connected to the visible product.
 - [x] Added preview pages for future Learning Paths and Profile areas.
 - [x] Split the frontend into feature folders with thin App Router entry points.
 - [x] Updated the canonical project documentation and frontend security boundary.
-- [x] Added CI and verified lint, typecheck, 56 unit tests, a production build,
-  the protected BFF smoke flow, and 54 Playwright scenarios across desktop,
+- [x] Added CI and verified lint, typecheck, 69 unit tests, a production build,
+  the protected BFF smoke flow, and 66 Playwright scenarios across desktop,
   tablet, and mobile layouts.
+- [x] Added the operator instance-control surface at `/instances`, disabled by
+  default, unlinked from the demo, and driven only through the same-origin BFF.
 - [x] Pushed the work to the `develop` branch of the frontend repository in
   small logical commits.
 
@@ -161,9 +163,22 @@ in the host's secret manager (never in `NEXT_PUBLIC_*` variables):
 | `BFF_AUTH_SECRET` | Shared backend bootstrap credential for login, session resolution, and logout. |
 | `BFF_SESSION_SECRET` | Independent frontend-only secret, at least 32 characters, used to encrypt the HttpOnly cookie value. Rotating it invalidates browser sessions. |
 | `BACKEND_SERVICE_TOKEN_SECRET`, `SERVICE_TOKEN_ISSUER`, `SERVICE_TOKEN_AUDIENCE` | Separate configuration for short-lived, scoped lifecycle and submission tokens. |
+| `LIVE_INSTANCE_UI` | Optional. `true` exposes the operator instance-control surface at `/instances`. Server-only, so the browser cannot reveal it; unset returns `404`. |
 
 See [`.env.example`](.env.example) for names only. Do not add a real `.env`
 file, token, certificate, or flag to Git.
+
+### Instance control surface
+
+`/instances` is an operator surface for the instance lifecycle: spawn, poll,
+extend, and destroy one target through the BFF. It exists only when
+`LIVE_INSTANCE_UI=true`, is never linked from the demo navigation, and carries a
+banner stating that the header's demo label does not apply to it. It requires a
+backend session, so it reports `UNAUTHORIZED` until the real-auth phase provides
+sign-in. The browser generates and retains one idempotency key per logical
+mutation, sends only `challengeId`, and receives a target URL only once the
+backend reports `running`. Enable it only on a deployment whose backend security
+gates in [`SECURITY.md`](SECURITY.md) are complete.
 
 ### Demo state
 

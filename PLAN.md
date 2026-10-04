@@ -144,8 +144,8 @@ themes; desktop/tablet layouts; demo guide and explicit local reset.
 All demo state remains in the browser. No real account is exposed through the
 visible product, and no live target, target URL, flag verification, or backend
 score is presented as demo data. The optional backend health check is still
-server-only and does not enable labs. All 54 browser cases passed across desktop,
-tablet, and mobile during UX verification, together with 56 unit tests, lint, type
+server-only and does not enable labs. All 66 browser cases passed across desktop,
+tablet, and mobile during UX verification, together with 69 unit tests, lint, type
 checks, a production build, and a post-build loopback BFF smoke test. Feature groups
 are pushed separately with GitHub CI between them.
 
@@ -159,6 +159,18 @@ mutation, and reveal a target URL only after the backend reports `running`.
 They do not connect the demo, authorize demo state, or make the preview a live
 platform. CI exercises the complete protected BFF path against a loopback-only
 backend fixture without using deployment credentials or creating a target.
+
+The first live-product surface is the flagged operator instance panel at
+`/instances`. It is server-gated by `LIVE_INSTANCE_UI`, returns `404` when that
+value is unset, is never linked from demo navigation, and states in its own
+banner that the shell's demo label does not apply to it. It drives spawn,
+polling, countdown, extend, and destroy entirely through the same-origin BFF:
+the browser sends only `challengeId`, generates and retains one idempotency key
+per logical mutation, reuses that key on retry, renders only stable error codes,
+and shows a target URL only once the backend reports `running`. It does not read
+or write demo state, and it grants no capability the BFF does not already
+enforce server-side. Public signup stays disabled, and no target is launched
+until the backend's required security gates are complete.
 
 Next platform work is a backend contract release and deployed BFF preflight,
 followed by a deliberately separate real-auth and live-product UI decision. The
@@ -350,7 +362,8 @@ file, and see their name on the leaderboard.
   then mark the instance running.
 * Expose HTTP challenges at a random subdomain under a wildcard certificate.
 * Build the instance panel in the web UI: spawn button, live state, target URL,
-  countdown, extend, and destroy.
+  countdown, extend, and destroy. The frontend surface exists behind
+  `LIVE_INSTANCE_UI`; the orchestrator behind it does not.
 * Write the reaper and reconciler as BullMQ 6 Job Schedulers that destroy
   expired instances and kill labelled containers with no live database row.
 
