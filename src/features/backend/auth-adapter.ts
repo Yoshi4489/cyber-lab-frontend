@@ -1,13 +1,6 @@
 import "server-only";
 import { z } from "zod";
-import {
-  BackendAdapterError,
-  BackendHttpError,
-  BackendResponseError,
-  BackendUnavailableError,
-  getBackendBaseUrl,
-  type BackendErrorCode,
-} from "./adapter";
+import { BackendAdapterError, requestBackendJson, requestBackendNoContent } from "./transport";
 import type { operations } from "./generated/openapi";
 
 const bffConfigSchema = z.object({
@@ -41,23 +34,6 @@ const resolvedSessionSchema = z
 const loginSchema: z.ZodType<BackendLogin> = resolvedSessionSchema
   .extend({ sessionToken: sessionTokenSchema })
   .strict();
-const errorSchema = z
-  .object({
-    code: z.enum([
-      "UNAUTHORIZED",
-      "FORBIDDEN",
-      "NOT_FOUND",
-      "CONFLICT",
-      "INVALID_REQUEST",
-      "RATE_LIMITED",
-      "NOT_IMPLEMENTED",
-      "INTERNAL_ERROR",
-    ]),
-    message: z.string(),
-    correlationId: z.uuid(),
-  })
-  .strict();
-
 export type BackendLoginInput =
   operations["login"]["requestBody"]["content"]["application/json"];
 export type BackendLogin =
@@ -88,73 +64,12 @@ export async function resolveBackendSession(
 }
 
 export async function logoutBackendSession(sessionToken: string): Promise<void> {
-  const response = await postBackend("/v1/auth/logout", {
-    sessionToken: validSessionToken(sessionToken),
-  });
-  if (response.ok && response.status === 204) return;
-  if (!response.ok) throw await httpError(response);
-  throw new BackendResponseError();
+  return requestBackendNoContent("/v1/auth/logout", { method: "POST",
+    authorization: bffAuthSecretFromEnvironment(), body: { sessionToken: validSessionToken(sessionToken) } });
 }
-
-async function postForJson<T>(
-  path: string,
-  body: object,
-  schema: z.ZodType<T>,
-): Promise<T> {
-  const response = await postBackend(path, body);
-  if (!response.ok) throw await httpError(response);
-  if (response.status !== 200 || !isJson(response)) {
-    throw new BackendResponseError();
-  }
-
-  let bodyJson: unknown;
-  try {
-    bodyJson = await response.json();
-  } catch {
-    throw new BackendResponseError();
-  }
-  const parsed = schema.safeParse(bodyJson);
-  if (!parsed.success) throw new BackendResponseError();
-  return parsed.data;
+async function postForJson<T>(path: string, body: object, schema: z.ZodType<T>): Promise<T> {
+  return requestBackendJson(path, schema, 200, { method: "POST", body, authorization: bffAuthSecretFromEnvironment() });
 }
-
-async function postBackend(path: string, body: object): Promise<Response> {
-  const bffAuthSecret = bffAuthSecretFromEnvironment();
-  try {
-    return await fetch(new URL(path, getBackendBaseUrl()), {
-      method: "POST",
-      cache: "no-store",
-      headers: {
-        Accept: "application/json",
-        Authorization: `Bearer ${bffAuthSecret}`,
-        "Content-Type": "application/json",
-        "X-Request-Id": crypto.randomUUID(),
-      },
-      body: JSON.stringify(body),
-      redirect: "error",
-      signal: AbortSignal.timeout(5000),
-    });
-  } catch (error) {
-    if (error instanceof BackendAdapterError) throw error;
-    throw new BackendUnavailableError();
-  }
-}
-
-async function httpError(response: Response): Promise<BackendHttpError> {
-  if (!isJson(response)) return new BackendHttpError(response.status);
-
-  try {
-    const parsed = errorSchema.safeParse(await response.json());
-    return new BackendHttpError(
-      response.status,
-      parsed.success ? (parsed.data.code as BackendErrorCode) : undefined,
-      parsed.success ? parsed.data.correlationId : undefined,
-    );
-  } catch {
-    return new BackendHttpError(response.status);
-  }
-}
-
 function bffAuthSecretFromEnvironment(): string {
   const parsed = bffConfigSchema.safeParse({
     BFF_AUTH_SECRET: process.env.BFF_AUTH_SECRET,
@@ -171,8 +86,4 @@ function validSessionToken(sessionToken: string): string {
     throw new BackendAdapterError("Backend session token is invalid.");
   }
   return parsed.data;
-}
-
-function isJson(response: Response): boolean {
-  return response.headers.get("content-type")?.split(";", 1)[0] === "application/json";
 }

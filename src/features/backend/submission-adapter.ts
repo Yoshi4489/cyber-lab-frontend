@@ -1,13 +1,6 @@
 import "server-only";
 import { z } from "zod";
-import {
-  BackendAdapterError,
-  BackendHttpError,
-  BackendResponseError,
-  BackendUnavailableError,
-  getBackendBaseUrl,
-  type BackendErrorCode,
-} from "./adapter";
+import { BackendAdapterError, requestBackendJson } from "./transport";
 import type { operations } from "./generated/openapi";
 
 const submissionInputSchema = z
@@ -29,23 +22,6 @@ const submissionResultSchema: z.ZodType<BackendFlagSubmission> = z
     source: z.literal("database"),
   })
   .strict();
-const errorSchema = z
-  .object({
-    code: z.enum([
-      "UNAUTHORIZED",
-      "FORBIDDEN",
-      "NOT_FOUND",
-      "CONFLICT",
-      "INVALID_REQUEST",
-      "RATE_LIMITED",
-      "NOT_IMPLEMENTED",
-      "INTERNAL_ERROR",
-    ]),
-    message: z.string(),
-    correlationId: z.uuid(),
-  })
-  .strict();
-
 export type BackendFlagSubmission =
   operations["submitFlag"]["responses"][200]["content"]["application/json"];
 
@@ -65,67 +41,8 @@ export async function submitBackendFlag(input: {
     throw new BackendAdapterError("Backend flag-submission input is invalid.");
   }
 
-  const response = await requestBackend(parsed.data);
-  if (!response.ok) throw await httpError(response);
-  if (response.status !== 200 || !isJson(response)) {
-    throw new BackendResponseError();
-  }
-
-  try {
-    const result = submissionResultSchema.safeParse(await response.json());
-    if (!result.success) throw new BackendResponseError();
-    return result.data;
-  } catch (error) {
-    if (error instanceof BackendResponseError) throw error;
-    throw new BackendResponseError();
-  }
-}
-
-async function requestBackend(input: {
-  serviceToken: string;
-  challengeId: string;
-  instanceId: string;
-  flag: string;
-}): Promise<Response> {
-  try {
-    return await fetch(new URL("/v1/submissions", getBackendBaseUrl()), {
-      method: "POST",
-      cache: "no-store",
-      headers: {
-        Accept: "application/json",
-        Authorization: `Bearer ${input.serviceToken}`,
-        "Content-Type": "application/json",
-        "X-Request-Id": crypto.randomUUID(),
-      },
-      body: JSON.stringify({
-        challengeId: input.challengeId,
-        instanceId: input.instanceId,
-        flag: input.flag,
-      }),
-      redirect: "error",
-      signal: AbortSignal.timeout(5000),
-    });
-  } catch (error) {
-    if (error instanceof BackendAdapterError) throw error;
-    throw new BackendUnavailableError();
-  }
-}
-
-async function httpError(response: Response): Promise<BackendHttpError> {
-  if (!isJson(response)) return new BackendHttpError(response.status);
-
-  try {
-    const parsed = errorSchema.safeParse(await response.json());
-    return new BackendHttpError(
-      response.status,
-      parsed.success ? (parsed.data.code as BackendErrorCode) : undefined,
-      parsed.success ? parsed.data.correlationId : undefined,
-    );
-  } catch {
-    return new BackendHttpError(response.status);
-  }
-}
-
-function isJson(response: Response): boolean {
-  return response.headers.get("content-type")?.split(";", 1)[0] === "application/json";
+  const { serviceToken, challengeId, instanceId, flag } = parsed.data;
+  return requestBackendJson("/v1/submissions", submissionResultSchema, 200, {
+    method: "POST", authorization: serviceToken, body: { challengeId, instanceId, flag },
+  });
 }

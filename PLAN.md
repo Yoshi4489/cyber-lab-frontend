@@ -1,5 +1,33 @@
 # Development Plan: CiscoKU Lab
 
+## Approved live API integration (October 2026)
+
+This integration supersedes the demo-only delivery boundary below. The backend
+reference is `../cyber-range-backend`, which remains read-only. Preserve the
+current visual design and convert features in separate, independently tested
+pushes, waiting for CI between groups:
+
+1. Consolidate the typed HTTP transport and shared error handling.
+2. Connect login, session restoration, logout, email verification, and password
+   recovery through the same-origin BFF. Public signup stays closed.
+3. Connect the database catalog and start/poll/extend/stop lab sessions.
+4. Connect flag submissions, dashboard progress, and the current-player profile.
+5. Connect the public database leaderboard and finish live acceptance.
+
+Confirmed policies: hide UI fields absent from the API; poll transitions every
+2 seconds and running instances every 15 seconds without overlapping requests;
+remember only returned instance/challenge IDs locally and revalidate ownership;
+clear remembered instances on logout or terminal states; require verified email
+server-side before creation. Configure the local backend auth limit to 60/minute
+for polling, and honor rate-limit backoff. Never use demo state as authorization,
+fall back to fictional data on API failure, or infer cross-device instance
+discovery from the available API.
+
+The server transport consolidation is implemented. Existing feature wrappers
+retain their interfaces and response validation. Live acceptance still needs a
+running API, a disposable player, and a prepared isolated worker/ingress with a
+reviewed runtime manifest. The default API origin is `http://127.0.0.1:4000`.
+
 ## CiscoKU Lab: approved UX implementation (September 2026)
 
 This section takes precedence for the current frontend work. The platform

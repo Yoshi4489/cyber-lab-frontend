@@ -1,13 +1,6 @@
 import "server-only";
 import { z } from "zod";
-import {
-  BackendAdapterError,
-  BackendHttpError,
-  BackendResponseError,
-  BackendUnavailableError,
-  getBackendBaseUrl,
-  type BackendErrorCode,
-} from "./adapter";
+import { BackendAdapterError, requestBackendJson } from "./transport";
 import type { operations } from "./generated/openapi";
 
 const serviceTokenSchema = z
@@ -69,23 +62,6 @@ const mutationSchema: z.ZodType<BackendInstanceMutation> = z
     replayed: z.boolean(),
   })
   .strict();
-const errorSchema = z
-  .object({
-    code: z.enum([
-      "UNAUTHORIZED",
-      "FORBIDDEN",
-      "NOT_FOUND",
-      "CONFLICT",
-      "INVALID_REQUEST",
-      "RATE_LIMITED",
-      "NOT_IMPLEMENTED",
-      "INTERNAL_ERROR",
-    ]),
-    message: z.string(),
-    correlationId: z.uuid(),
-  })
-  .strict();
-
 export type BackendInstance =
   operations["getInstance"]["responses"][200]["content"]["application/json"];
 export type BackendInstanceMutation =
@@ -146,98 +122,17 @@ export async function destroyBackendInstance(input: {
   );
 }
 
-async function instanceRequest(
-  path: string,
-  serviceToken: string,
-): Promise<BackendInstance> {
-  const response = await requestBackend(path, "GET", serviceToken);
-  if (!response.ok) throw await httpError(response);
-  if (response.status !== 200 || !isJson(response)) {
-    throw new BackendResponseError();
-  }
-  return parseResponse(response, instanceSchema);
+async function instanceRequest(path: string, serviceToken: string): Promise<BackendInstance> {
+  return requestBackendJson(path, instanceSchema, 200, { authorization: serviceToken });
 }
-
-async function mutationRequest(
-  path: string,
-  method: "POST" | "DELETE",
-  serviceToken: string,
-  options: { idempotencyKey: string; body?: object },
-): Promise<BackendInstanceMutation> {
-  const response = await requestBackend(path, method, serviceToken, options);
-  if (!response.ok) throw await httpError(response);
-  if (response.status !== 202 || !isJson(response)) {
-    throw new BackendResponseError();
-  }
-  return parseResponse(response, mutationSchema);
+async function mutationRequest(path: string, method: "POST" | "DELETE", serviceToken: string,
+  options: { idempotencyKey: string; body?: object }): Promise<BackendInstanceMutation> {
+  return requestBackendJson(path, mutationSchema, 202, { ...options, method, authorization: serviceToken });
 }
-
-async function requestBackend(
-  path: string,
-  method: "GET" | "POST" | "DELETE",
-  serviceToken: string,
-  options?: { idempotencyKey: string; body?: object },
-): Promise<Response> {
-  const headers: Record<string, string> = {
-    Accept: "application/json",
-    Authorization: `Bearer ${serviceToken}`,
-    "X-Request-Id": crypto.randomUUID(),
-  };
-  if (options) headers["Idempotency-Key"] = options.idempotencyKey;
-  if (options?.body) headers["Content-Type"] = "application/json";
-
-  try {
-    return await fetch(new URL(path, getBackendBaseUrl()), {
-      method,
-      cache: "no-store",
-      headers,
-      body: options?.body ? JSON.stringify(options.body) : undefined,
-      redirect: "error",
-      signal: AbortSignal.timeout(5000),
-    });
-  } catch (error) {
-    if (error instanceof BackendAdapterError) throw error;
-    throw new BackendUnavailableError();
-  }
-}
-
-async function parseResponse<T>(
-  response: Response,
-  schema: z.ZodType<T>,
-): Promise<T> {
-  try {
-    const parsed = schema.safeParse(await response.json());
-    if (!parsed.success) throw new BackendResponseError();
-    return parsed.data;
-  } catch (error) {
-    if (error instanceof BackendResponseError) throw error;
-    throw new BackendResponseError();
-  }
-}
-
-async function httpError(response: Response): Promise<BackendHttpError> {
-  if (!isJson(response)) return new BackendHttpError(response.status);
-
-  try {
-    const parsed = errorSchema.safeParse(await response.json());
-    return new BackendHttpError(
-      response.status,
-      parsed.success ? (parsed.data.code as BackendErrorCode) : undefined,
-      parsed.success ? parsed.data.correlationId : undefined,
-    );
-  } catch {
-    return new BackendHttpError(response.status);
-  }
-}
-
 function parseInput<T>(schema: z.ZodType<T>, input: unknown) {
   const parsed = schema.safeParse(input);
   if (!parsed.success) {
     throw new BackendAdapterError("Backend instance input is invalid.");
   }
   return parsed;
-}
-
-function isJson(response: Response): boolean {
-  return response.headers.get("content-type")?.split(";", 1)[0] === "application/json";
 }
