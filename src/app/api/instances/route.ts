@@ -15,7 +15,7 @@ export async function POST(request: Request): Promise<Response> {
     const idempotencyKey = readIdempotencyKey(request);
     if (!input || !idempotencyKey) return bffError(400, "INVALID_REQUEST");
 
-    const serviceToken = await issueBffServiceToken("instances:write");
+    const serviceToken = await issueBffServiceToken("instances:write", true);
     return bffJson(
       await createBackendInstance({ ...input, serviceToken, idempotencyKey }),
       202,

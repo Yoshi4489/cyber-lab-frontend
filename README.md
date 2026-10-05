@@ -270,3 +270,30 @@ The control plane must never share a host with vulnerable targets. Future
 targets require default-deny egress, private-network isolation, resource caps,
 short lifetimes, and disposable hosts. Those controls belong to the backend
 and lab infrastructure.
+## Live API integration
+
+The real authentication surfaces are `/login`, `/verify-email`,
+`/forgot-password`, and `/reset-password`. Public signup remains closed.
+Catalog and learning screens are being converted in separate feature groups;
+their demo labels remain until those groups land.
+
+Configure frontend-only `BFF_SESSION_SECRET` independently of all backend
+secrets. `BFF_AUTH_SECRET`, `BACKEND_SERVICE_TOKEN_SECRET`,
+`SERVICE_TOKEN_ISSUER`, and `SERVICE_TOKEN_AUDIENCE` must match the backend.
+Set `BACKEND_URL=http://127.0.0.1:4000` and `BFF_PUBLIC_ORIGIN` to the exact
+frontend browser origin. No credential uses a `NEXT_PUBLIC_` variable.
+
+To check login, refresh, the HttpOnly cookie, and logout against a prepared
+local backend, build the frontend and run the verifier with ignored environment
+files. Use a disposable account; the verifier never prints its credentials.
+
+```powershell
+npm run build
+node --env-file=../cyber-range-backend/.env --env-file=.env.local scripts/verify-live.mjs
+```
+
+Set `LIVE_PLAYER_EMAIL` and `LIVE_PLAYER_PASSWORD` in the ignored frontend
+`.env.local` for that verifier. It temporarily starts the built frontend at
+`http://127.0.0.1:3200`, uses the running API, and stops its own frontend
+afterward. `LIVE_FRONTEND_ORIGIN` overrides this test origin. These variables
+are used only by the verification script, not by client components.

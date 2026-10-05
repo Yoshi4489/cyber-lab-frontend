@@ -87,3 +87,10 @@ function validSessionToken(sessionToken: string): string {
   }
   return parsed.data;
 }
+export async function authEmailOperation(operation: "verification/request" | "verification/confirm" | "password-reset/request" | "password-reset/confirm",
+  body: { email: string } | { token: string; newPassword?: string }): Promise<{ accepted: true } | undefined> {
+  const options = { method: "POST" as const, authorization: bffAuthSecretFromEnvironment(), body };
+  const path = `/v1/auth/${operation}`;
+  if (operation.endsWith("/request")) return requestBackendJson(path, z.object({ accepted: z.literal(true) }).strict(), 202, options);
+  await requestBackendNoContent(path, options);
+}

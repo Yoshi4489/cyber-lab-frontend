@@ -23,6 +23,13 @@ for polling, and honor rate-limit backoff. Never use demo state as authorization
 fall back to fictional data on API failure, or infer cross-device instance
 discovery from the available API.
 
+The server transport consolidation is pushed as `c29d6f7`; GitHub CI passed.
+Real login, session restoration, logout, verification/reset BFF forms, and the
+verified-email creation guard are implemented. Fixture browser coverage and
+server-boundary tests accompany them. Live auth acceptance awaits a valid
+disposable player: the running API is ready and accepts the BFF credential,
+but the previously saved lifecycle-test login returns `UNAUTHORIZED`.
+
 The server transport consolidation is implemented. Existing feature wrappers
 retain their interfaces and response validation. Live acceptance still needs a
 running API, a disposable player, and a prepared isolated worker/ingress with a

@@ -68,7 +68,7 @@ describe("BFF instance routes", () => {
     expect(response.status).toBe(202);
     await expect(response.json()).resolves.toEqual(mutation);
     expect(response.headers.get("cache-control")).toBe("no-store");
-    expect(mocks.issueBffServiceToken).toHaveBeenCalledWith("instances:write");
+    expect(mocks.issueBffServiceToken).toHaveBeenCalledWith("instances:write", true);
     expect(mocks.createBackendInstance).toHaveBeenCalledWith({
       challengeId,
       serviceToken,

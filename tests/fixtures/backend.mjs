@@ -106,6 +106,14 @@ export function createBackendFixture({
         sendJson(response, 200, resolvedSession);
         return;
       }
+      if (["/v1/auth/verification/request", "/v1/auth/password-reset/request"].includes(requestUrl)) {
+        sendJson(response, 202, { accepted: true });
+        return;
+      }
+      if (["/v1/auth/verification/confirm", "/v1/auth/password-reset/confirm"].includes(requestUrl)) {
+        response.writeHead(204).end();
+        return;
+      }
       if (requestUrl === "/v1/auth/logout") {
         response.writeHead(204).end();
         return;

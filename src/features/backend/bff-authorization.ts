@@ -30,6 +30,7 @@ export class BffUnauthorizedScopeError extends Error {
  */
 export async function issueBffServiceToken(
   scope: BackendServiceScope,
+  requireVerifiedEmail = false,
 ): Promise<string> {
   const cookieSession = await readBackendSessionCookie();
   if (!cookieSession) throw new BffUnauthenticatedError();
@@ -45,7 +46,7 @@ export async function issueBffServiceToken(
     throw error;
   }
 
-  if (!session.allowedScopes.includes(scope)) {
+  if ((requireVerifiedEmail && !session.user.emailVerified) || !session.allowedScopes.includes(scope)) {
     throw new BffUnauthorizedScopeError();
   }
   return issueBackendServiceToken(session, scope);

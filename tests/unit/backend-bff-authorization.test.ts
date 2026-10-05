@@ -86,6 +86,13 @@ describe("BFF backend authorization", () => {
     expect(mocks.issueBackendServiceToken).not.toHaveBeenCalled();
   });
 
+  it("rejects unverified creation without blocking cleanup", async () => {
+    mocks.resolveBackendSession.mockResolvedValue({ ...resolvedSession, user: { ...resolvedSession.user, emailVerified: false } });
+    await expect(issueBffServiceToken("instances:write", true)).rejects.toBeInstanceOf(BffUnauthorizedScopeError);
+    expect(mocks.issueBackendServiceToken).not.toHaveBeenCalled();
+    await expect(issueBffServiceToken("instances:write")).resolves.toBe("header.payload.signature");
+  });
+
   it("rejects a scope absent from the trusted session", async () => {
     mocks.resolveBackendSession.mockResolvedValue({
       ...resolvedSession,
