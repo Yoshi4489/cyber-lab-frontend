@@ -9,10 +9,12 @@ A hands-on security training platform. Users browse a catalog of deliberately
 vulnerable challenges, spawn a private isolated target on demand, attack it,
 and submit a flag to score points. Comparable to HackTheBox or TryHackMe.
 
-Status: the CiscoKU Lab UX mockup is implemented at the repository root using
-Next.js App Router. It includes browser-local demo onboarding, progression, and
-simulated sessions. Real auth, live data, scoring, and spawning remain unfinished.
-Read the UX section of `PLAN.md` before the future platform phases.
+Status: the CiscoKU Lab frontend uses Next.js App Router at the repository root.
+Real BFF authentication, the database catalog, and learner instance controls are
+implemented. Progress/dashboard identity and leaderboard screens still contain
+explicitly labeled demo state; they never authorize a live operation. Live worker
+acceptance, submissions/progress UI, and the database leaderboard remain pending.
+Read the live API integration checkpoint in `PLAN.md` before future phases.
 
 This is the **frontend repository**. The independent backend is in the sibling
 `../cyber-range-backend` repository. Do not add an orchestrator, Docker access,
@@ -67,7 +69,8 @@ Auth, React Hook Form with Zod, Vitest and Playwright.
 
 The frontend currently uses Next.js, React, TypeScript, Tailwind, local Geist
 fonts, shadcn-style source components with Radix primitives, and Playwright.
-Better Auth and live data integration are planned. Fastify, BullMQ on Redis,
+Backend authentication is integrated through the frontend BFF; scoring and
+progress UI integration are still planned. Fastify, BullMQ on Redis,
 Dockerode, and Traefik belong to the separate backend and lab infrastructure.
 
 Keep route files thin. Place components, state, and CSS modules with their feature.

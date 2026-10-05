@@ -1,90 +1,33 @@
 # CiscoKU Lab — frontend
 
 A free university security learning website, designed for curious learners.
-The current delivery is a clickable UX mockup with sample data.
+The frontend is being integrated with the independent backend in verified,
+separate pushes.
 
-## What works
+## Current delivery
 
-- Guest home and public catalog with 12 sample entries across web security,
-  Linux, networking, cryptography, and forensics.
-- Search, combined topic/difficulty filters, sorting, grid/list views, bookmarks,
-  and public lab briefings.
-- Username-only demo onboarding, a personal dashboard, XP, levels, badges,
-  streaks, daily goals, and progress by topic.
-- Simulated sessions with an absolute expiry timer, stop, finish, and replay.
-  Each sample lab awards demo XP once.
-- Fictional global leaderboard; clearly marked Learning Paths/Profile previews.
-- System, light, and dark themes; desktop and tablet layouts; mobile fallback;
-  reduced-motion support and keyboard navigation.
+- Real account login, encrypted HttpOnly BFF sessions, logout, email verification,
+  and password recovery. Public account registration remains closed.
+- Published database catalog, search/filter/sort, bookmarks, backend briefings,
+  and published recommendations on the home and demo dashboard.
+- Learner HTTP instance controls at `/labs/[slug]/session`: start, poll, resume
+  by a revalidated ID, extend, and stop. Target links appear only while running.
+- Shared typed browser/server HTTP layers, stable error handling, and loading,
+  empty, retry, and storage-failure states.
+- Existing visual design, local artwork/fonts, themes, and responsive navigation.
 
-**The visible product remains demo-only.** Demo progress lives in this browser.
-The server has same-origin BFF authentication, lifecycle, and submission routes,
-but no product page uses them yet. Real content, scoring, capacity, and isolated
-targets remain future work in the separate [backend repository](../cyber-range-backend).
-No payments are planned. Public account registration remains closed until the
-security launch gates are complete.
+Integration is not complete. Dashboard identity/progress, the sidebar account,
+and the leaderboard are still clearly labeled browser-local demos. Learning
+Paths and Profile remain previews. Demo identity never authorizes a backend
+operation or records a real solve. `/signup` is demo-only username onboarding,
+not public account registration. Real accounts sign in at `/login`.
 
-## Project tracking
+Remaining groups: backend account navigation, submissions and progress/profile,
+the database leaderboard, and real isolated-worker/ingress acceptance. The
+loopback fixture verifies frontend behavior; it does not establish runtime
+isolation, worker availability, or production launch readiness.
 
-Current status: the frontend Phase 1 UX/UI mockup is complete and ready for
-review. Server-only backend contract, authentication, sealed-session, lifecycle,
-submission, and CSRF groundwork are available, but the live backend and lab
-execution system are not connected to the visible product.
-
-### Done
-
-- [x] Established the CiscoKU Lab visual direction and responsive frontend shell.
-- [x] Added the public landing page, catalog, search, filters, sorting, bookmarks,
-  and lab briefings.
-- [x] Added browser-only demo onboarding, learner progress, dashboard, XP, levels,
-  badges, streaks, topic progress, and fictional leaderboard data.
-- [x] Added the simulated lab lifecycle: start, timer, stop, finish, expiry, and
-  replay without creating a real target.
-- [x] Added preview pages for future Learning Paths and Profile areas.
-- [x] Split the frontend into feature folders with thin App Router entry points.
-- [x] Updated the canonical project documentation and frontend security boundary.
-- [x] Added CI and verified lint, typecheck, 69 unit tests, a production build,
-  the protected BFF smoke flow, and 66 Playwright scenarios across desktop,
-  tablet, and mobile layouts.
-- [x] Added the operator instance-control surface at `/instances`, disabled by
-  default, unlinked from the demo, and driven only through the same-origin BFF.
-- [x] Pushed the work to the `develop` branch of the frontend repository in
-  small logical commits.
-
-### Currently working
-
-- [ ] Review the Phase 1 mockup and record any UX changes before backend
-  integration begins.
-- [ ] Verify a released backend contract and deployed BFF configuration without
-  exposing a live product in the demo.
-- [ ] Keep the frontend demo stable while the separate backend and launch
-  controls are completed.
-
-### Planned next
-
-- [ ] Release the backend contract and run the HTTPS-only contract-freshness
-  check against `GET /v1/openapi.json`.
-- [ ] Configure the BFF's server-only deployment secrets and verify its
-  authenticated session path with a non-public test account.
-- [ ] Decide and build a real authentication and live-product UI that is
-  distinct from browser-local demo onboarding and simulation.
-- [ ] Replace browser-only catalog, learner progress, and leaderboard views
-  only after the relevant backend data and security controls are ready.
-
-### Still left for the full platform
-
-- [ ] Challenge authoring, runtime flag injection, submissions, scoring, and
-  production leaderboard data.
-- [ ] Database persistence, capacity limits, rate limits, cleanup workers, and
-  monitoring.
-- [ ] Target isolation: separate control plane, default-deny egress, private
-  network protection, resource caps, short TTLs, and disposable hosts.
-- [ ] Complete Learning Paths, Profile, community, teams, and certificates.
-- [ ] Production deployment, domains, environment configuration, accessibility
-  review, security review, and launch approval.
-
-The browser demo remains usable while this work is pending. Do not describe its
-sample XP, progress, leaderboard, or lab sessions as real platform data.
+See [PLAN.md](PLAN.md) for the current checkpoint and categorized push history.
 
 ## Run locally
 
@@ -95,9 +38,13 @@ npm ci
 npm run dev
 ```
 
-Open **http://127.0.0.1:3000**. Fonts and artwork are local. No backend or
-database is required. Choose **Join the demo**, enter a fictional username,
-then view a sample lab and select **Start Lab** and **Finish Lab**.
+Open **http://127.0.0.1:3000**. Fonts and artwork are local. Configure the
+server-only variables listed below in an ignored `.env.local` and start the
+backend separately using its README. The default API origin is
+`http://127.0.0.1:4000`; this repository does not start or modify backend services.
+Set `BFF_PUBLIC_ORIGIN=http://127.0.0.1:3000` for the default frontend command.
+Use a provisioned test account at `/login`, then browse the published catalog.
+Only start a real lab on a prepared isolated worker with its security gates met.
 
 A production preview can run with `npm run build` followed by `npm start`.
 Vercel is the chosen preview hosting target. This change does not provision or
@@ -117,10 +64,9 @@ npm run api:types -- --check
 
 The generator fetches `GET /v1/openapi.json`, validates the configured API
 origin, and writes `src/features/backend/generated/openapi.ts`. It does not
-write or maintain a copied OpenAPI document. Generated types and the adapter
-are Phase 1 groundwork only; the browser-local demo remains the active UI
-until later frontend phases connect catalog, authentication, and lifecycle
-flows.
+write or maintain a copied OpenAPI document. Generated types and shared
+runtime validators support the integrated catalog, authentication, and lifecycle
+flows; progress and leaderboard UI conversion remains pending.
 
 The **Backend contract freshness** GitHub Actions workflow provides the
 equivalent read-only check from CI. Run it with a routable HTTPS backend API
@@ -137,6 +83,7 @@ directly or send an acting user ID. The server-only BFF exposes:
 
 | Endpoint | Behavior |
 |---|---|
+| `GET /api/catalog` | Combines validated categories and challenges from the public database API without a mock fallback. |
 | `POST /api/auth/login` | Accepts only email and password, performs a BFF-authenticated backend login, and stores an encrypted HttpOnly cookie. |
 | `GET /api/auth/session` | Resolves the sealed cookie server-side and returns only `authenticated`, display name, and verification state. |
 | `POST /api/auth/logout` | Revokes the backend session and clears the cookie. Repeated or expired logout is safe. |
@@ -174,21 +121,29 @@ file, token, certificate, or flag to Git.
 extend, and destroy one target through the BFF. It exists only when
 `LIVE_INSTANCE_UI=true`, is never linked from the demo navigation, and carries a
 banner stating that the header's demo label does not apply to it. It requires a
-backend session, so it reports `UNAUTHORIZED` until the real-auth phase provides
-sign-in. The browser generates and retains one idempotency key per logical
+backend session established through `/login`. The browser generates and retains
+one idempotency key per logical
 mutation, sends only `challengeId`, and receives a target URL only once the
 backend reports `running`. Enable it only on a deployment whose backend security
 gates in [`SECURITY.md`](SECURITY.md) are complete.
 
-### Demo state
+### Remaining demo state (not backend identity or progress)
 
 | Storage key | Purpose |
 |---|---|
 | `ciscoku:learner:v1` | Demo username, sign-in state, unique completions, session timestamps |
 | `cyber-range:saved-labs:v1` | Existing browser bookmarks, preserved across the redesign |
 | `ciscoku:theme` | System/light/dark preference |
+| `ciscoku:active-instance:v1` | Only instance/challenge IDs; ownership and current state are revalidated by the BFF |
 
-XP and levels are derived from catalog fixtures and unique completions. These
+Instance mutation retry keys are stored separately in session storage under
+`ciscoku:mutation:*` and removed after a confirmed response. They are not
+authentication credentials. Logout clears the remembered instance; terminal
+statuses stop polling and clear it too.
+
+The historical simulated completion controls are no longer on lab pages.
+XP and levels still displayed in the demo dashboard are derived from old catalog
+fixtures and unique local completions, not from backend solves. These
 are illustrative reward rules, not production scoring policy. The same username
 resumes local progress; entering a different username starts a fresh demo.
 Sign out does not clear progress. The **Demo guide** includes an explicit reset.
@@ -201,9 +156,9 @@ can lose that temporary state. No demo value grants server access.
 |---|---|
 | `src/app/` | Thin App Router entry points, metadata, HTTP status route |
 | `src/features/shell/`, `theme/` | Shared navigation, temporary identity, theme controls |
-| `src/features/catalog/`, `briefing/`, `bookmarks/` | Sample metadata, discovery, public briefings, saved labs |
+| `src/features/catalog/`, `briefing/`, `bookmarks/` | Published catalog, preview metadata, backend briefings, saved labs |
 | `src/features/learner/` | Validated demo state and onboarding |
-| `src/features/dashboard/`, `session/`, `leaderboard/` | Progress, simulated lifecycle, fictional rankings |
+| `src/features/dashboard/`, `session/`, `leaderboard/` | Demo progress, backend lifecycle, fictional rankings |
 | `src/features/landing/`, `preview/`, `guide/` | Guest entry, future-page previews, demo help |
 | `src/features/backend/` | Server-only backend adapters, BFF authorization, and maintainer status UI |
 | `src/components/ui/`, `src/styles/` | Small shared primitives, theme tokens, loading states |
@@ -270,12 +225,14 @@ The control plane must never share a host with vulnerable targets. Future
 targets require default-deny egress, private-network isolation, resource caps,
 short lifetimes, and disposable hosts. Those controls belong to the backend
 and lab infrastructure.
+
 ## Live API integration
 
 The real authentication surfaces are `/login`, `/verify-email`,
 `/forgot-password`, and `/reset-password`. Public signup remains closed.
-Catalog and learning screens are being converted in separate feature groups;
-their demo labels remain until those groups land.
+The catalog and learner session panel now use the real API. Navigation identity,
+dashboard progress, and leaderboard screens are being converted in later groups.
+The live session panel explicitly distinguishes itself from the demo shell.
 
 Configure frontend-only `BFF_SESSION_SECRET` independently of all backend
 secrets. `BFF_AUTH_SECRET`, `BACKEND_SERVICE_TOKEN_SECRET`,

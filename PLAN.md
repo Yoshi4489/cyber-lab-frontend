@@ -26,18 +26,51 @@ discovery from the available API.
 The server transport consolidation is pushed as `c29d6f7`; GitHub CI passed.
 Real login, session restoration, logout, verification/reset BFF forms, and the
 verified-email creation guard are implemented. Fixture browser coverage and
-server-boundary tests accompany them. Live auth acceptance awaits a valid
-disposable player: the running API is ready and accepts the BFF credential,
-but the previously saved lifecycle-test login returns `UNAUTHORIZED`.
+server-boundary tests accompany them. Authentication is pushed as `1a2a78f`;
+GitHub CI passed. Live authentication acceptance passed against the running
+backend with a disposable verified player: login, HttpOnly SameSite cookie,
+session restoration after refresh, and logout. Test credentials remain in an
+ignored local environment file, never in source or browser code.
+
+The database catalog, backend briefings, bookmarks, published home recommendations,
+and learner start/poll/extend/stop controls are implemented. Browser coverage uses
+a loopback backend fixture: session restoration, target URL gating, stop cleanup,
+storage denial, and retained idempotency keys after a lost create response. These
+checks verify the frontend boundary, not a real isolated worker or target.
+
+### Categorized delivery checkpoints
+
+Each row was committed and pushed separately after local verification, with
+GitHub CI required before the next push. Feature tests live with their feature.
+
+| Commit | Category | Debugging boundary |
+|---|---|---|
+| `34eb4aa` | Browser API-client refactor | Instance requests reuse shared error/response handling. |
+| `084941b` | Catalog contract refactor | Shared runtime schemas; no adapter behavior change. |
+| `0c08366` | Learner labs feature | Published catalog/briefings, recommendations, lifecycle UI, and browser coverage. |
+
+Local feature gates passed: lint, typecheck, 74 unit tests, production build,
+loopback BFF smoke, and 78 browser tests across desktop, mobile, and tablet.
+Real-backend authentication acceptance passed again against the feature build.
+The following documentation push updates this checkpoint separately from code.
+Use `git show --stat <commit>` to locate a change; do not log credentials,
+cookies, service tokens, reset links, or flags while debugging.
+
+Remaining integration work: replace demo navigation/dashboard identity with the
+backend account; connect submissions, progress/profile, and the database
+leaderboard; finish real worker/ingress acceptance. Public signup stays closed.
+Never interpret fixture lifecycle success as production launch readiness.
 
 The server transport consolidation is implemented. Existing feature wrappers
-retain their interfaces and response validation. Live acceptance still needs a
-running API, a disposable player, and a prepared isolated worker/ingress with a
-reviewed runtime manifest. The default API origin is `http://127.0.0.1:4000`.
+retain their interfaces and response validation. Live lifecycle acceptance still
+needs a prepared isolated worker/ingress with a reviewed runtime manifest. API
+readiness and disposable-player authentication were verified separately. The
+default API origin is `http://127.0.0.1:4000`.
 
 ## CiscoKU Lab: approved UX implementation (September 2026)
 
-This section takes precedence for the current frontend work. The platform
+This section records the historical demo delivery; the live integration above
+supersedes its demo-only boundary. The platform
 architecture and numbered backend phases below remain future work. The user
 authorized implementation after discovery: this delivery is a clickable mockup,
 with no real accounts, payments, challenge internals, or lab execution.
