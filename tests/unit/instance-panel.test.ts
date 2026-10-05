@@ -164,7 +164,7 @@ describe("instance BFF client", () => {
     }
   });
 
-  it("refuses an error body carrying more than a stable code", async () => {
+  it("preserves the stable error code and diagnostic reference without echoing messages", async () => {
     stubFetch(
       jsonResponse(
         {
@@ -178,7 +178,8 @@ describe("instance BFF client", () => {
 
     expect(await readInstance(instanceId)).toEqual({
       ok: false,
-      code: "INTERNAL_ERROR",
+      code: "RATE_LIMITED",
+      correlationId: operationId,
     });
   });
 

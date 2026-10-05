@@ -1,5 +1,6 @@
 "use client";
 import { z } from "zod";
+import { requestBff, type ApiErrorCode, type ApiResult } from "../backend/client";
 
 /**
  * Browser-side client for the same-origin instance BFF. It never sends an
@@ -47,20 +48,6 @@ const mutationSchema = z
     replayed: z.boolean(),
   })
   .strict();
-const errorSchema = z
-  .object({
-    code: z.enum([
-      "UNAUTHORIZED",
-      "FORBIDDEN",
-      "NOT_FOUND",
-      "CONFLICT",
-      "INVALID_REQUEST",
-      "RATE_LIMITED",
-      "NOT_IMPLEMENTED",
-      "INTERNAL_ERROR",
-    ]),
-  })
-  .strict();
 const idempotencyKeyPattern = /^[A-Za-z0-9._:-]{8,128}$/;
 const uuidPattern =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -70,13 +57,8 @@ export type Instance = z.infer<typeof instanceSchema>;
 export type InstanceMutation = z.infer<typeof mutationSchema>;
 export type InstanceOperation = "create" | "extend" | "destroy";
 /** `UNREACHABLE` and `MALFORMED` are client-side outcomes, not backend codes. */
-export type InstanceErrorCode =
-  | z.infer<typeof errorSchema>["code"]
-  | "UNREACHABLE"
-  | "MALFORMED";
-export type InstanceResult<T> =
-  | { ok: true; value: T }
-  | { ok: false; code: InstanceErrorCode };
+export type InstanceErrorCode = ApiErrorCode;
+export type InstanceResult<T> = ApiResult<T>;
 
 export function newIdempotencyKey(operation: InstanceOperation): string {
   return `${operation}:${crypto.randomUUID()}`;
@@ -174,7 +156,7 @@ export function formatCountdown(milliseconds: number): string {
 export function errorMessage(code: InstanceErrorCode): string {
   switch (code) {
     case "UNAUTHORIZED":
-      return "This surface needs a backend session. Sign-in arrives with the real-auth phase.";
+      return "This surface needs a backend session. Please sign in.";
     case "FORBIDDEN":
       return "The session lacks the scope for this operation.";
     case "NOT_FOUND":
@@ -198,54 +180,4 @@ export function errorMessage(code: InstanceErrorCode): string {
 
 function instancePath(instanceId: string): string {
   return `/api/instances/${encodeURIComponent(instanceId)}`;
-}
-
-async function requestBff<T>(
-  path: string,
-  schema: z.ZodType<T>,
-  expectedStatus: number,
-  init: RequestInit,
-): Promise<InstanceResult<T>> {
-  let response: Response;
-  try {
-    response = await fetch(path, {
-      ...init,
-      cache: "no-store",
-      credentials: "same-origin",
-      redirect: "error",
-    });
-  } catch {
-    return { ok: false, code: "UNREACHABLE" };
-  }
-
-  if (!response.ok) return { ok: false, code: await readErrorCode(response) };
-  if (response.status !== expectedStatus || !isJson(response)) {
-    return { ok: false, code: "MALFORMED" };
-  }
-
-  const parsed = schema.safeParse(await readJson(response));
-  return parsed.success
-    ? { ok: true, value: parsed.data }
-    : { ok: false, code: "MALFORMED" };
-}
-
-async function readErrorCode(response: Response): Promise<InstanceErrorCode> {
-  if (!isJson(response)) return "INTERNAL_ERROR";
-
-  const parsed = errorSchema.safeParse(await readJson(response));
-  return parsed.success ? parsed.data.code : "INTERNAL_ERROR";
-}
-
-async function readJson(response: Response): Promise<unknown> {
-  try {
-    return await response.json();
-  } catch {
-    return null;
-  }
-}
-
-function isJson(response: Response): boolean {
-  return (
-    response.headers.get("content-type")?.split(";", 1)[0] === "application/json"
-  );
 }
