@@ -4,14 +4,12 @@ import {
   ArrowRight,
   Award,
   Check,
-  Clock3,
   FlaskConical,
   Sparkles,
   Target,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { labs } from "@/features/catalog/data";
-import { LabCard } from "@/features/catalog/lab-card";
+import { CatalogRecommendations } from "@/features/catalog/recommendations";
 import { activity, badgesFor } from "@/features/learner/model";
 import { DemoNotice } from "@/features/learner/demo-notice";
 import { useLearner } from "@/features/learner/store";
@@ -36,18 +34,9 @@ export function Dashboard() {
             Join the demo <ArrowRight size={16} />
           </Link>
         </Button>
-        <Link href="/labs">Or browse the sample labs →</Link>
+        <Link href="/labs">Or browse the published labs →</Link>
       </section>
     );
-  const next =
-    labs.find(
-      (lab) =>
-        lab.difficulty === "Easy" &&
-        learner.completions[lab.slug] === undefined,
-    ) ?? labs.find((lab) => learner.completions[lab.slug] === undefined);
-  const active = labs.filter(
-    (lab) => (learner.sessions[lab.slug]?.expiresAt ?? 0) > now,
-  );
   const { today } = activity(learner, now);
   return (
     <div className={styles.dashboard}>
@@ -72,49 +61,14 @@ export function Dashboard() {
               <span className={styles.kicker}>
                 <Sparkles size={14} /> YOUR NEXT SMALL WIN
               </span>
-              <h2>{next ? next.title : "Look how far you've come."}</h2>
-              <p>
-                {next
-                  ? "A good place to begin. Get familiar with the basics and find your rhythm, one step at a time."
-                  : "You explored every sample lab. Revisit a favorite or see your progress on the leaderboard."}
-              </p>
-              {next && (
-                <div className={styles.heroMeta}>
-                  <span>{next.difficulty}</span>
-                  <span>
-                    <Clock3 size={14} /> {next.minutes} min
-                  </span>
-                  <span>+{next.points} demo XP</span>
-                </div>
-              )}
+              <h2>Your next discovery awaits.</h2>
+              <p>Browse the published catalog. Live lab sessions require a backend account; this dashboard’s progress is still a separate demo.</p>
               <Button asChild>
-                <Link href={next ? `/labs/${next.slug}` : "/labs"}>
-                  {next ? "View lab" : "Explore labs"}
-                  <ArrowRight size={16} />
-                </Link>
+                <Link href="/labs">Explore labs <ArrowRight size={16} /></Link>
               </Button>
             </div>
             <LearningArt />
           </section>
-          {active.length > 0 && (
-            <section className={styles.panel}>
-              <h2>Your active demos</h2>
-              {active.map((lab) => (
-                <Link
-                  className={styles.activeSession}
-                  key={lab.slug}
-                  href={`/labs/${lab.slug}/session`}
-                >
-                  <FlaskConical size={19} />
-                  <span>
-                    {lab.title}
-                    <small>Simulated session · resume where you left off</small>
-                  </span>
-                  <ArrowRight size={18} />
-                </Link>
-              ))}
-            </section>
-          )}
           <SkillProgress learner={learner} />
           <section className={styles.explore}>
             <div className={styles.sectionHeading}>
@@ -127,17 +81,7 @@ export function Dashboard() {
               </Link>
             </div>
             <div className={styles.miniGrid}>
-              {labs
-                .filter((lab) =>
-                  [
-                    "first-steps",
-                    "cipher-zero",
-                    "hidden-in-plain-sight",
-                  ].includes(lab.slug),
-                )
-                .map((lab) => (
-                  <LabCard key={lab.slug} lab={lab} />
-                ))}
+              <CatalogRecommendations />
             </div>
           </section>
         </div>

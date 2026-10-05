@@ -7,6 +7,7 @@ import {
   LockKeyhole,
 } from "lucide-react";
 import type { Lab } from "./data";
+import type { LiveLab } from "./live";
 import styles from "./art.module.css";
 const icons = {
   cookie: Cookie,
@@ -16,7 +17,7 @@ const icons = {
   fingerprint: Fingerprint,
   lock: LockKeyhole,
 };
-export function LabArt({ lab, large = false }: { lab: Lab; large?: boolean }) {
+export function LabArt({ lab, large = false }: { lab: Lab | LiveLab; large?: boolean }) {
   const Icon = icons[lab.artwork];
   return (
     <div

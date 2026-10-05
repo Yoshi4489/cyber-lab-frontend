@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import { Catalog } from "@/features/catalog/catalog";
-import { labs } from "@/features/catalog/data";
+import { CatalogLoader } from "@/features/catalog/loader";
 
 export const metadata: Metadata = { title: "Explore labs" };
 
@@ -12,11 +11,11 @@ export default function LabsPage() {
           <p className="eyebrow">A LITTLE CURIOSITY GOES A LONG WAY</p>
           <h1>Find your next discovery.</h1>
           <p>
-            Explore 12 sample labs, at your own pace. Every session is a demo.
+            Explore the published labs, at your own pace.
           </p>
         </div>
       </div>
-      <Catalog labs={labs} />
+      <CatalogLoader />
     </>
   );
 }

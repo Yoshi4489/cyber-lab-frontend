@@ -1,5 +1,25 @@
 import { expect, test } from "@playwright/test";
 
+test("catalog shows loading, recoverable errors, and honest empty data", async ({ page, request }) => {
+  let release!: () => void;
+  const gate = new Promise<void>(resolve => { release = resolve; });
+  await page.route("**/api/catalog", async route => { await gate; await route.abort(); });
+  await page.goto("/labs");
+  await expect(page.getByText("Loading labs…", { exact: true })).toBeVisible();
+  release();
+  await expect(page.getByRole("main").getByRole("alert")).toContainText("UNREACHABLE");
+  await expect(page.getByTestId("lab-card")).toHaveCount(0);
+  await page.unroute("**/api/catalog");
+  await page.getByRole("button", { name: "Retry loading labs" }).click();
+  await expect(page.getByTestId("lab-card")).toHaveCount(1);
+  try {
+    await request.post("http://127.0.0.1:4101/scenario/empty-catalog");
+    await page.reload();
+    await expect(page.getByRole("heading", { name: "No labs found" })).toBeVisible();
+    await expect(page.getByTestId("lab-card")).toHaveCount(0);
+  } finally { await request.post("http://127.0.0.1:4101/scenario/healthy"); }
+});
+
 test("catalog combines search, category and difficulty; empty state can recover", async ({
   page,
 }) => {
@@ -9,23 +29,23 @@ test("catalog combines search, category and difficulty; empty state can recover"
   await expect(
     page.getByRole("heading", { name: "Find your next discovery." }),
   ).toBeVisible();
-  await expect(page.getByTestId("lab-card")).toHaveCount(12);
+  await expect(page.getByTestId("lab-card")).toHaveCount(1);
   await page.getByRole("button", { name: "Web security", exact: true }).click();
-  await expect(page.getByTestId("lab-card")).toHaveCount(3);
+  await expect(page.getByTestId("lab-card")).toHaveCount(1);
   await page.getByLabel("Difficulty", { exact: true }).selectOption("Easy");
   await expect(page.getByTestId("lab-card")).toHaveCount(1);
   await expect(
-    page.getByRole("heading", { name: "Cookie Monster" }),
+    page.getByRole("heading", { name: "Intro Web" }),
   ).toBeVisible();
   await page.getByRole("textbox", { name: "Search labs" }).fill("not-a-lab");
   await expect(
     page.getByRole("heading", { name: "No labs found" }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Reset filters" }).click();
-  await expect(page.getByTestId("lab-card")).toHaveCount(12);
-  await page.getByLabel("Sort labs").selectOption("shortest");
+  await expect(page.getByTestId("lab-card")).toHaveCount(1);
+  await page.getByLabel("Sort labs").selectOption("points");
   await expect(page.getByTestId("lab-card").first()).toContainText(
-    "First Steps in Linux",
+    "Intro Web",
   );
   expect(errors).toEqual([]);
 });
@@ -35,51 +55,53 @@ test("bookmarks persist across navigation and reload, then can be removed", asyn
 }) => {
   await page.goto("/labs");
   await page
-    .getByRole("button", { name: "Save Cookie Monster", exact: true })
+    .getByRole("button", { name: "Save Intro Web", exact: true })
     .click();
   await expect(
-    page.getByRole("button", { name: "Unsave Cookie Monster", exact: true }),
+    page.getByRole("button", { name: "Unsave Intro Web", exact: true }),
   ).toHaveAttribute("aria-pressed", "true");
   await page.goto("/saved");
   await expect(page.getByTestId("lab-card")).toHaveCount(1);
   await page.reload();
   await expect(
-    page.getByRole("heading", { name: "Cookie Monster" }),
+    page.getByRole("heading", { name: "Intro Web" }),
   ).toBeVisible();
   await page
-    .getByRole("button", { name: "Unsave Cookie Monster", exact: true })
+    .getByRole("button", { name: "Unsave Intro Web", exact: true })
     .click();
   await expect(
     page.getByRole("heading", { name: "Keep your next challenge close." }),
   ).toBeVisible();
 });
 
-test("catalog links lead to briefings with a demo entry point", async ({
+test("catalog links lead to backend briefings with real authentication", async ({
   page,
 }) => {
   await page.goto("/labs");
-  await page.getByRole("link", { name: "Cookie Monster", exact: true }).click();
+  await page.getByRole("link", { name: "Intro Web", exact: true }).click();
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-    "Cookie Monster.",
+    "Intro Web.",
   );
   await expect(
-    page.getByRole("heading", { name: "What you’ll learn" }),
+    page.getByRole("heading", { name: "A little context before you begin." }),
   ).toBeVisible();
   await expect(page.getByRole("link", { name: "Start Lab" })).toHaveAttribute(
     "href",
-    "/signup?lab=cookie-monster",
+    "/login?next=%2Flabs%2Fintro-web%2Fsession",
   );
   await page
-    .getByRole("button", { name: "Save Cookie Monster", exact: true })
+    .getByRole("button", { name: "Save Intro Web", exact: true })
     .click();
   await expect(
-    page.getByRole("button", { name: "Unsave Cookie Monster", exact: true }),
+    page.getByRole("button", { name: "Unsave Intro Web", exact: true }),
   ).toBeVisible();
   const response = await page.goto("/labs/does-not-exist");
-  expect(response?.status()).toBe(404);
+  // Next.js returns 200 for a streamed notFound response, 404 before streaming.
+  expect([200, 404]).toContain(response?.status());
   await expect(
     page.getByRole("heading", { name: "This trail goes quiet." }),
   ).toBeVisible();
+  await expect(page.locator('meta[name="robots"][content*="noindex"]').first()).toBeAttached();
 });
 
 test("navigation and layout work at the current viewport", async ({

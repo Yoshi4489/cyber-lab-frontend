@@ -12,7 +12,8 @@ import {
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { categories, type Lab } from "./data";
+import type { Lab } from "./data";
+import type { LiveLab } from "./live";
 import { LabCard } from "./lab-card";
 import { useSavedLabs } from "@/features/bookmarks/use-saved-labs";
 import styles from "./catalog.module.css";
@@ -20,8 +21,10 @@ import styles from "./catalog.module.css";
 export function Catalog({
   labs,
   savedOnly = false,
+  categories,
 }: {
-  labs: Lab[];
+  labs: (Lab | LiveLab)[];
+  categories: string[];
   savedOnly?: boolean;
 }) {
   const [query, setQuery] = useState("");
@@ -43,11 +46,7 @@ export function Catalog({
           .includes(query.toLowerCase().trim()),
     )
     .sort((a, b) =>
-      sort === "shortest"
-        ? a.minutes - b.minutes
-        : sort === "points"
-          ? b.points - a.points
-          : 0,
+      sort === "points" ? b.points - a.points : a.title.localeCompare(b.title),
     );
   const hasFilters =
     query !== "" || category !== "All labs" || difficulty !== "all";
@@ -72,7 +71,7 @@ export function Catalog({
           <p>
             {savedOnly
               ? "A little inspiration for your next session."
-              : "Five topics. Plenty of ways to begin."}
+              : "Browse the published challenge catalog."}
           </p>
         </div>
         {!savedOnly && (
@@ -173,9 +172,8 @@ export function Catalog({
             value={sort}
             onChange={(e) => setSort(e.target.value)}
           >
-            <option value="recommended">Recommended</option>
-            <option value="shortest">Shortest first</option>
-            <option value="points">Highest demo XP</option>
+            <option value="recommended">Title</option>
+            <option value="points">Highest points</option>
           </select>
         </label>
       </div>
@@ -216,8 +214,7 @@ export function Catalog({
         </div>
       )}
       <p className={styles.disclaimer}>
-        Sample catalog · titles, durations, and rewards illustrate the
-        experience. Learning content comes later.
+        Published catalog · availability and scores are provided by the backend.
       </p>
     </section>
   );

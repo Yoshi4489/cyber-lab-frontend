@@ -137,7 +137,11 @@ export function isActive(status: InstanceStatus): boolean {
  * server-side contract so a mid-provision payload cannot surface an address.
  */
 export function targetUrlFor(instance: Instance): string | null {
-  return instance.status === "running" && instance.url ? instance.url : null;
+  if (instance.status !== "running" || !instance.url) return null;
+  try {
+    const url = new URL(instance.url);
+    return ["https:", "http:"].includes(url.protocol) && !url.username && !url.password ? instance.url : null;
+  } catch { return null; }
 }
 
 export function remainingMs(instance: Instance, now: number): number {

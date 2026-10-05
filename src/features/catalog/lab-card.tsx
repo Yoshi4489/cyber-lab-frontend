@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowUpRight, Clock3, Zap } from "lucide-react";
 import type { Lab } from "./data";
+import type { LiveLab } from "./live";
 import { LabArt } from "./lab-art";
 import { SaveButton } from "@/features/bookmarks/save-button";
 import styles from "./catalog.module.css";
@@ -21,7 +22,7 @@ export function DifficultyBadge({
   );
 }
 
-export function LabCard({ lab }: { lab: Lab }) {
+export function LabCard({ lab }: { lab: Lab | LiveLab }) {
   return (
     <article className={styles.card} data-testid="lab-card">
       <Link href={`/labs/${lab.slug}`} tabIndex={-1} aria-hidden="true">
@@ -40,13 +41,10 @@ export function LabCard({ lab }: { lab: Lab }) {
         </h3>
         <p>{lab.description}</p>
         <div className={styles.cardFooter}>
-          <span>
-            <Clock3 size={14} />
-            {lab.minutes} min
-          </span>
+          {"minutes" in lab && <span><Clock3 size={14} />{lab.minutes} min</span>}
           <span>
             <Zap size={14} />
-            {lab.points} demo XP
+            {lab.points} {"id" in lab ? "points" : "demo XP"}
           </span>
           <SaveButton slug={lab.slug} title={lab.title} />
         </div>

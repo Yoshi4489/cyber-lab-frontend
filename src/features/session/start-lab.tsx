@@ -1,37 +1,13 @@
 "use client";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { ArrowRight, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useLearner } from "@/features/learner/store";
-import { startSession } from "./actions";
-
+import { ApiError } from "@/features/backend/api-error";
+import { useAuth } from "@/features/auth/provider";
 export function StartLab({ slug }: { slug: string }) {
-  const { learner, ready } = useLearner();
-  const router = useRouter();
-  if (!ready)
-    return (
-      <Button disabled className="full-width">
-        Getting ready…
-      </Button>
-    );
-  if (!learner.signedIn)
-    return (
-      <Button asChild className="full-width">
-        <Link href={`/signup?lab=${slug}`}>
-          Start Lab <ArrowRight size={16} />
-        </Link>
-      </Button>
-    );
-  return (
-    <Button
-      className="full-width"
-      onClick={() => {
-        startSession(slug);
-        router.push(`/labs/${slug}/session`);
-      }}
-    >
-      <Play size={15} /> Start Lab
-    </Button>
-  );
+  const { session, loading, error, refresh } = useAuth();
+  if (loading) return <Button disabled className="full-width">Checking session…</Button>;
+  if (error) return <><ApiError error={error} /><Button onClick={() => void refresh()}>Retry session</Button></>;
+  if (!session?.authenticated) return <Button asChild className="full-width"><Link href={`/login?next=${encodeURIComponent(`/labs/${slug}/session`)}`}>Start Lab</Link></Button>;
+  if (!session.user.emailVerified) return <Button asChild className="full-width"><Link href="/verify-email">Verify email to start</Link></Button>;
+  return <Button asChild className="full-width"><Link href={`/labs/${slug}/session`}>Start Lab</Link></Button>;
 }

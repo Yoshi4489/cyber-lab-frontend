@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import { Catalog } from "@/features/catalog/catalog";
-import { labs } from "@/features/catalog/data";
+import { CatalogLoader } from "@/features/catalog/loader";
 
 export const metadata: Metadata = { title: "Saved labs" };
 
@@ -16,7 +15,7 @@ export default function SavedPage() {
           <p>Saved on this device, ready when curiosity calls.</p>
         </div>
       </div>
-      <Catalog labs={labs} savedOnly />
+      <CatalogLoader savedOnly />
     </>
   );
 }

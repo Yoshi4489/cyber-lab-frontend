@@ -15,6 +15,7 @@ test("dashboard explains guest access and starts a new learner at zero", async (
   await expect(
     page.getByRole("progressbar", { name: "Progress to next level" }),
   ).toHaveAttribute("value", "0");
-  await page.getByRole("link", { name: "View lab", exact: true }).click();
-  await expect(page).toHaveURL(/\/labs\/cookie-monster$/);
+  await expect(page.getByRole("link", { name: "Intro Web", exact: true })).toBeVisible();
+  await page.getByRole("link", { name: "Explore labs", exact: true }).click();
+  await expect(page).toHaveURL(/\/labs$/);
 });

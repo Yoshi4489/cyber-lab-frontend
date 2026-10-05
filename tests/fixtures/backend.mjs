@@ -37,11 +37,15 @@ export function createBackendFixture({
     audience: serviceTokenAudience,
   });
   let scenario = "healthy";
+  let liveInstance = null;
+  const acceptedMutations = new Map();
   const requests = [];
   const server = createServer(async (request, response) => {
     const requestUrl = request.url ?? "/";
     if (request.method === "POST" && requestUrl.startsWith("/scenario/")) {
       scenario = requestUrl.slice("/scenario/".length);
+      liveInstance = null;
+      acceptedMutations.clear();
       response.writeHead(204).end();
       return;
     }
@@ -130,6 +134,37 @@ export function createBackendFixture({
         });
         return;
       }
+      if (scenario === "lifecycle") {
+        const key = `${request.method}:${requestUrl}:${request.headers["idempotency-key"]}`;
+        if (request.method !== "GET" && acceptedMutations.has(key)) {
+          sendJson(response, 202, { ...acceptedMutations.get(key), replayed: true });
+          return;
+        }
+        if (request.method === "POST" && requestUrl === "/v1/instances") {
+          const now = Date.now();
+          liveInstance = { ...pendingInstance, createdAt: new Date(now).toISOString(),
+            expiresAt: new Date(now + 3600000).toISOString(),
+            absoluteExpiresAt: new Date(now + 7200000).toISOString() };
+        } else if (!liveInstance || !requestUrl.startsWith(`/v1/instances/${liveInstance.id}`)) {
+          sendJson(response, 404, { code: "NOT_FOUND", message: "Unavailable instance.", correlationId });
+          return;
+        } else if (request.method === "GET") {
+          if (liveInstance.status === "pending") liveInstance = { ...liveInstance, status: "running", startedAt: new Date().toISOString(), url: "https://lab.example.test" };
+          if (liveInstance.status === "stopping") liveInstance = { ...liveInstance, status: "stopped", stoppedAt: new Date().toISOString() };
+          sendJson(response, 200, liveInstance);
+          return;
+        } else if (request.method === "DELETE") {
+          const withoutTarget = { ...liveInstance };
+          delete withoutTarget.url;
+          liveInstance = { ...withoutTarget, status: "stopping" };
+        } else if (request.method === "POST" && requestUrl.endsWith("/extend")) {
+          liveInstance = { ...liveInstance, expiresAt: new Date(Math.min(Date.parse(liveInstance.expiresAt) + 1800000, Date.parse(liveInstance.absoluteExpiresAt))).toISOString() };
+        }
+        const accepted = { ...instanceMutation, instance: liveInstance };
+        acceptedMutations.set(key, accepted);
+        sendJson(response, 202, accepted);
+        return;
+      }
       if (request.method === "POST" && requestUrl === "/v1/instances") {
         sendJson(response, 202, instanceMutation);
         return;
@@ -185,7 +220,7 @@ export function createBackendFixture({
       return;
     }
     if (requestUrl === "/v1/challenges") {
-      sendJson(response, 200, { challenges: [challenge], source: "database" });
+      sendJson(response, 200, { challenges: scenario === "empty-catalog" ? [] : [challenge], source: "database" });
       return;
     }
     if (requestUrl.startsWith("/v1/challenges/")) {

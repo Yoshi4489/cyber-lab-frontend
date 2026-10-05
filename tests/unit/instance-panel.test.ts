@@ -269,6 +269,12 @@ describe("instance presentation helpers", () => {
     expect(inactive.some(isActive)).toBe(false);
   });
 
+  it("does not render executable or credential-bearing target links", () => {
+    for (const url of ["javascript:alert(1)", "ftp://target.example.test", "https://user:password@target.example.test", "not a url"]) {
+      expect(targetUrlFor({ ...runningInstance, url })).toBeNull();
+    }
+  });
+
   it("counts down from an absolute expiry without going negative", () => {
     const expiry = Date.parse(pendingInstance.expiresAt);
 

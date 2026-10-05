@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test("leaderboard distinguishes fictional users from the demo learner and updates XP", async ({
+test("demo leaderboard stays separate from authenticated lab activity", async ({
   page,
 }) => {
   await page.goto("/leaderboard");
@@ -13,13 +13,9 @@ test("leaderboard distinguishes fictional users from the demo learner and update
   await page.goto("/leaderboard");
   const row = page.getByRole("row").filter({ hasText: "ranking_owl" });
   await expect(row).toContainText("#8");
-  await page.goto("/labs/cookie-monster");
-  await page.getByRole("button", { name: "Start Lab" }).click();
-  await page.getByRole("button", { name: "Finish Lab", exact: true }).click();
+  await page.goto("/labs/intro-web");
+  await expect(page.getByRole("link", { name: "Start Lab" })).toHaveAttribute("href", "/login?next=%2Flabs%2Fintro-web%2Fsession");
   await page.goto("/leaderboard");
-  await expect(row).toContainText("#7");
-  await expect(row.getByRole("cell").last()).toHaveText("100");
-  await expect(
-    page.getByRole("row").filter({ hasText: "hello_otter" }),
-  ).toContainText("#7");
+  await expect(row).toContainText("#8");
+  await expect(row.getByRole("cell").last()).toHaveText("0");
 });

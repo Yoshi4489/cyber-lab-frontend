@@ -1,15 +1,11 @@
 import Link from "next/link";
 import { ArrowRight, BookOpen, Heart, Sparkles, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { labs } from "@/features/catalog/data";
-import { LabCard } from "@/features/catalog/lab-card";
+import { CatalogRecommendations } from "@/features/catalog/recommendations";
 import { LearningArt } from "@/features/dashboard/learning-art";
 import styles from "./landing.module.css";
 
 export function Landing() {
-  const starters = labs.filter((lab) =>
-    ["cookie-monster", "first-steps", "cipher-zero"].includes(lab.slug),
-  );
   return (
     <div className={styles.page}>
       <header className={styles.welcome}>
@@ -43,7 +39,7 @@ export function Landing() {
             </Link>
           </div>
           <span className={styles.note}>
-            Interactive preview · sample labs and simulated progress
+            Published labs · dashboard progress remains a separate demo
           </span>
         </div>
         <div className={styles.art}>
@@ -87,13 +83,11 @@ export function Landing() {
             <p>No security experience? You are in the right place.</p>
           </div>
           <Link href="/labs">
-            View all 12 labs <ArrowRight size={15} />
+            View all labs <ArrowRight size={15} />
           </Link>
         </div>
         <div className={styles.cards}>
-          {starters.map((lab) => (
-            <LabCard key={lab.slug} lab={lab} />
-          ))}
+          <CatalogRecommendations />
         </div>
       </section>
       <section className={styles.community}>
