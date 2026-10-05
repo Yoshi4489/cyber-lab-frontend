@@ -1,6 +1,7 @@
 import "server-only";
 import { z } from "zod";
 import { requestBackendJson } from "./transport";
+import { categoriesSchema, challengesSchema, challengeSchema } from "./catalog-schemas";
 export { BackendAdapterError, BackendHttpError, BackendResponseError, BackendUnavailableError, getBackendBaseUrl } from "./transport";
 export type { BackendErrorCode } from "./transport";
 import type { operations } from "./generated/openapi";
@@ -17,28 +18,6 @@ export type BackendLeaderboard =
   operations["getLeaderboard"]["responses"][200]["content"]["application/json"];
 const healthSchema: z.ZodType<BackendLiveness> = z
   .object({ status: z.literal("ok") })
-  .strict();
-const categoriesSchema: z.ZodType<BackendCategories> = z
-  .object({ categories: z.array(z.string()) })
-  .strict();
-const challengeSchema: z.ZodType<BackendChallenge> = z
-  .object({
-    id: z.uuid(),
-    slug: z.string(),
-    title: z.string(),
-    summary: z.string(),
-    category: z.string(),
-    difficulty: z.enum(["easy", "medium", "hard"]),
-    points: z.number().int().nonnegative(),
-    kind: z.enum(["web", "shell"]),
-    tags: z.array(z.string()),
-  })
-  .strict();
-const challengesSchema: z.ZodType<BackendChallenges> = z
-  .object({
-    challenges: z.array(challengeSchema),
-    source: z.literal("database"),
-  })
   .strict();
 const leaderboardSchema: z.ZodType<BackendLeaderboard> = z
   .object({
