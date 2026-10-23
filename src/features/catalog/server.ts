@@ -1,4 +1,13 @@
 import "server-only";
 import { cache } from "react";
 import { getBackendChallenge } from "@/features/backend/adapter";
-export const readChallenge = cache(getBackendChallenge);
+import { getFrontendMode } from "@/features/backend/frontend-mode";
+import { previewCatalog } from "./preview";
+export const readChallenge = cache(async (slug: string) => {
+  if (getFrontendMode() === "preview") {
+    const challenge = previewCatalog.response.challenges.find(item => item.slug === slug);
+    if (!challenge) throw new Error("Unknown preview lab");
+    return challenge;
+  }
+  return getBackendChallenge(slug);
+});

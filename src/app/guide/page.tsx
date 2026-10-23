@@ -10,9 +10,11 @@ import {
 import { BackendStatus } from "@/features/backend/backend-status";
 import { DemoControls } from "@/features/guide/demo-controls";
 import styles from "@/features/guide/guide.module.css";
+import { getFrontendMode } from "@/features/backend/frontend-mode";
 
 export const metadata: Metadata = { title: "Demo guide" };
 export default function GuidePage() {
+  const preview = getFrontendMode() === "preview";
   return (
     <div className={styles.page}>
       <header>
@@ -35,19 +37,16 @@ export default function GuidePage() {
           <FlaskConical size={24} />
           <h2>Try a simulated session.</h2>
           <p>
-            Start Lab opens a timer and instance status panel. No server or
-            target is created. You can stop, resume, or finish the demo. The
-            countdown keeps its original end time after refresh.
+            {preview ? "The session page is a preview for now. Timers, start, stop, and Finish demo controls are coming in the next phase. No server or target is created." : "Live sessions use the backend account and instance controls. No demo username authorizes a real target."}
           </p>
         </section>
         <section>
           <Sparkles size={24} />
           <h2>Watch small wins add up.</h2>
           <p>
-            Finish Lab simulates completion. Each sample lab awards XP once.
-            Every 500 demo XP adds a level. One completion meets the daily goal;
-            consecutive learning days build a streak. Leaderboard classmates are
-            fictional.
+            Demo progress and rewards are illustrative; existing completions stay
+            in this browser. Completion controls are coming in the next phase.
+            Leaderboard classmates are fictional.
           </p>
         </section>
         <section>
@@ -75,14 +74,14 @@ export default function GuidePage() {
       <section className={styles.panel}>
         <DemoControls />
       </section>
-      <details className={styles.details}>
+      {!preview && <details className={styles.details}>
         <summary>Maintainer tools: optional backend connection check</summary>
         <p>
           This diagnostic checks API availability only. It does not start labs
           or enable real accounts.
         </p>
         <BackendStatus />
-      </details>
+      </details>}
     </div>
   );
 }

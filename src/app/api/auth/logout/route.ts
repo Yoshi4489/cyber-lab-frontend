@@ -1,3 +1,4 @@
+import { previewApiResponse } from "@/features/backend/frontend-mode";
 import { logoutBackendSession } from "../../../../features/backend/auth-adapter";
 import {
   backendBffError,
@@ -15,6 +16,8 @@ import {
 } from "../../../../features/backend/csrf";
 
 export async function POST(request: Request): Promise<Response> {
+  const preview = previewApiResponse();
+  if (preview) return preview;
   try {
     assertSameOriginMutation(request);
     const cookieSession = await readBackendSessionCookie();

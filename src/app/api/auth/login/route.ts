@@ -1,3 +1,4 @@
+import { previewApiResponse } from "@/features/backend/frontend-mode";
 import { z } from "zod";
 import { loginBackend, logoutBackendSession } from "../../../../features/backend/auth-adapter";
 import {
@@ -19,6 +20,8 @@ const loginInputSchema = z
   .strict();
 
 export async function POST(request: Request): Promise<Response> {
+  const preview = previewApiResponse();
+  if (preview) return preview;
   try {
     assertSameOriginMutation(request);
     const input = await loginInput(request);

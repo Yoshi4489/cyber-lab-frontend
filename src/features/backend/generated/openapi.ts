@@ -230,7 +230,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Creates owned instance intent. Requires instances:write and Idempotency-Key. */
+        /** @description Creates owned instance intent. Requires instances:write, Idempotency-Key, and currently verified email. */
         post: operations["createInstance"];
         delete?: never;
         options?: never;
@@ -249,7 +249,7 @@ export interface paths {
         get: operations["getInstance"];
         put?: never;
         post?: never;
-        /** @description Requests retry-safe destruction of an owned instance. */
+        /** @description Requests retry-safe destruction of an owned instance. Requires an empty request body. */
         delete: operations["destroyInstance"];
         options?: never;
         head?: never;
@@ -265,7 +265,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Adds 30 minutes without exceeding the two-hour absolute lifetime. */
+        /** @description Adds 30 minutes without exceeding the two-hour absolute lifetime. Requires an empty request body. */
         post: operations["extendInstance"];
         delete?: never;
         options?: never;

@@ -4,8 +4,10 @@ import { Button } from "@/components/ui/button";
 import { CatalogRecommendations } from "@/features/catalog/recommendations";
 import { LearningArt } from "@/features/dashboard/learning-art";
 import styles from "./landing.module.css";
+import { useAuth } from "@/features/auth/provider";
 
 export function Landing() {
+  const { mode } = useAuth();
   return (
     <div className={styles.page}>
       <header className={styles.welcome}>
@@ -39,7 +41,7 @@ export function Landing() {
             </Link>
           </div>
           <span className={styles.note}>
-            Published labs · dashboard progress remains a separate demo
+            {mode === "preview" ? "Demo workspace · sample labs and local progress" : "Published labs · dashboard progress remains a separate demo"}
           </span>
         </div>
         <div className={styles.art}>

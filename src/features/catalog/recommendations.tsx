@@ -5,8 +5,16 @@ import { useResource } from "@/features/backend/use-resource";
 import { readCatalog } from "./client";
 import { toLiveLab } from "./live";
 import { LabCard } from "./lab-card";
+import { useAuth } from "@/features/auth/provider";
+import { previewLabs } from "./preview";
 
 export function CatalogRecommendations() {
+  const { mode } = useAuth();
+  return mode === "preview"
+    ? previewLabs.slice(0, 3).map(lab => <LabCard key={lab.slug} lab={lab} />)
+    : <LiveRecommendations />;
+}
+function LiveRecommendations() {
   const resource = useResource(readCatalog);
   if (resource.loading) return <p role="status">Loading published labs…</p>;
   if (resource.error) return <div><ApiError error={resource.error} /><Button onClick={resource.retry}>Retry recommendations</Button></div>;

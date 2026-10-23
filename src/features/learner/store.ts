@@ -65,7 +65,7 @@ export function enterDemo(name: string) {
   return true;
 }
 export function leaveDemo() {
-  updateLearner((current) => ({ ...current, signedIn: false }));
+  updateLearner((current) => ({ ...current, signedIn: false, sessions: {} }));
 }
 export function resetDemo() {
   write(emptyLearner);

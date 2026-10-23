@@ -5,6 +5,7 @@ import { useState, type ReactNode } from "react";
 import { ChevronRight, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet } from "@/components/ui/sheet";
+import { useAuth } from "@/features/auth/provider";
 import { useLearner } from "@/features/learner/store";
 import { ThemeToggle } from "@/features/theme/theme-toggle";
 import { Navigation } from "./navigation";
@@ -12,7 +13,9 @@ import styles from "./shell.module.css";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const { learner } = useLearner();
+  const { session, loading, mode } = useAuth();
+  const { learner, ready } = useLearner();
+  const signedOut = mode === "preview" ? ready && !learner.signedIn : !loading && session?.authenticated === false;
   const [open, setOpen] = useState(false);
   const section = pathname.startsWith("/labs")
     ? "Labs"
@@ -64,12 +67,12 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className={styles.tools}>
             <span className={styles.demo}>
               <span />
-              Demo workspace
+              {mode === "preview" ? "Demo workspace" : "Learning workspace"}
             </span>
             <ThemeToggle />
-            {!learner.signedIn && (
+            {signedOut && (
               <Button asChild size="sm">
-                <Link href="/signup">Get started</Link>
+                <Link href="/login">Sign in</Link>
               </Button>
             )}
           </div>

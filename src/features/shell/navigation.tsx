@@ -11,8 +11,10 @@ import {
   Trophy,
   UserRound,
 } from "lucide-react";
+import { useState } from "react";
+import { useAuth } from "@/features/auth/provider";
 import { useLearner, leaveDemo } from "@/features/learner/store";
-import { levelFor, totalXp, XP_PER_LEVEL } from "@/features/learner/model";
+import { ApiError } from "@/features/backend/api-error";
 import { Brand } from "./brand";
 import styles from "./shell.module.css";
 
@@ -26,8 +28,28 @@ const navigation = [
 export function Navigation({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { learner } = useLearner();
-  const xp = totalXp(learner);
+  const { session, loading, error, refresh, signOut, mode } = useAuth();
+  const { learner, ready } = useLearner();
+  const [signingOut, setSigningOut] = useState(false);
+  const user = mode === "preview"
+    ? learner.signedIn && learner.username ? { displayName: learner.username, emailVerified: false } : null
+    : session?.authenticated ? session.user : null;
+  async function handleSignOut() {
+    if (mode === "preview") {
+      leaveDemo();
+      onNavigate?.();
+      router.push("/");
+      return;
+    }
+    if (signingOut) return;
+    setSigningOut(true);
+    const result = await signOut();
+    setSigningOut(false);
+    if (result.ok) {
+      onNavigate?.();
+      router.push("/");
+    }
+  }
   return (
     <>
       <Brand onNavigate={onNavigate} />
@@ -55,20 +77,6 @@ export function Navigation({ onNavigate }: { onNavigate?: () => void }) {
           );
         })}
       </nav>
-      {learner.signedIn && (
-        <div className={styles.level}>
-          <div>
-            <span>Level {levelFor(xp)}</span>
-            <strong>{xp} XP</strong>
-          </div>
-          <progress
-            aria-label="Sidebar level progress"
-            value={xp % XP_PER_LEVEL}
-            max={XP_PER_LEVEL}
-          />
-          <p>Every small step counts.</p>
-        </div>
-      )}
       <div className={styles.bottom}>
         <div className={styles.community}>
           <Heart size={20} />
@@ -80,33 +88,34 @@ export function Navigation({ onNavigate }: { onNavigate?: () => void }) {
         </div>
         <div className={styles.account}>
           <span className={styles.avatar}>
-            {learner.signedIn
-              ? learner.username?.slice(0, 2).toUpperCase()
+            {user
+              ? user.displayName.slice(0, 2).toUpperCase()
               : "Hi"}
           </span>
           <div>
             <strong>
-              {learner.signedIn ? learner.username : "Hello, explorer"}
+              {user ? user.displayName : "Hello, explorer"}
             </strong>
             <small>
-              {learner.signedIn
-                ? "Local demo learner"
+              {mode === "preview" ? !ready ? "Getting your demo ready…" : user ? "Demo learner · this browser" : "Make yourself at home" : loading ? "Checking session…" : user
+                ? user.emailVerified ? "Verified account" : "Email verification needed"
                 : "Make yourself at home"}
             </small>
           </div>
-          {learner.signedIn && (
+          {user && (
             <button
-              aria-label="Sign out of demo"
-              onClick={() => {
-                leaveDemo();
-                onNavigate?.();
-                router.push("/");
-              }}
+              aria-label={signingOut ? "Signing out" : "Sign out"}
+              disabled={signingOut || loading}
+              onClick={() => void handleSignOut()}
             >
               <LogOut size={17} />
             </button>
           )}
         </div>
+        {mode === "live" && <ApiError error={error} />}
+        {mode === "live" && error && !user && (
+          <button disabled={loading} onClick={() => void refresh()}>Retry session</button>
+        )}
       </div>
     </>
   );

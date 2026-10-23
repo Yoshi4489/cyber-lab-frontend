@@ -3,6 +3,8 @@ import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import { AuthProvider } from "@/features/auth/provider";
 import { AppShell } from "@/features/shell/app-shell";
+import { connection } from "next/server";
+import { getFrontendMode } from "@/features/backend/frontend-mode";
 import { themeScript } from "@/features/theme/theme-init";
 import "./globals.css";
 
@@ -16,9 +18,11 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  // Read the deployment mode at request time, rather than baking it into pages.
+  await connection();
   return (
     <html
       lang="en"
@@ -29,7 +33,7 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body>
-        <AuthProvider><AppShell>{children}</AppShell></AuthProvider>
+        <AuthProvider mode={getFrontendMode()}><AppShell>{children}</AppShell></AuthProvider>
       </body>
     </html>
   );

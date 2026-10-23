@@ -1,3 +1,4 @@
+import { previewApiResponse } from "@/features/backend/frontend-mode";
 import { resolveBackendSession } from "../../../../features/backend/auth-adapter";
 import {
   authenticatedBffSession,
@@ -11,6 +12,8 @@ import {
 } from "../../../../features/backend/bff-session";
 
 export async function GET(): Promise<Response> {
+  const preview = previewApiResponse();
+  if (preview) return preview;
   try {
     const cookieSession = await readBackendSessionCookie();
     if (!cookieSession) return unauthenticatedBffSession();

@@ -1,3 +1,4 @@
+import { previewApiResponse } from "@/features/backend/frontend-mode";
 import { issueBffServiceToken } from "../../../../../features/backend/bff-authorization";
 import { bffError, bffJson } from "../../../../../features/backend/bff-response";
 import { assertSameOriginMutation } from "../../../../../features/backend/csrf";
@@ -13,6 +14,8 @@ export async function POST(
   request: Request,
   context: RouteContext<"/api/instances/[id]/extend">,
 ): Promise<Response> {
+  const preview = previewApiResponse();
+  if (preview) return preview;
   try {
     assertSameOriginMutation(request);
     const instanceId = readInstanceId((await context.params).id);

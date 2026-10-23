@@ -1,4 +1,5 @@
 import "server-only";
+import { previewApiResponse } from "./frontend-mode";
 import { z } from "zod";
 import { authEmailOperation } from "./auth-adapter";
 import { assertSameOriginMutation, CsrfValidationError } from "./csrf";
@@ -7,6 +8,8 @@ import { backendBffError, bffError, bffJson, bffNoContent } from "./bff-response
 export type EmailOperation = "verification/request" | "verification/confirm" | "password-reset/request" | "password-reset/confirm";
 export function emailRoute(operation: EmailOperation) {
   return async (request: Request): Promise<Response> => {
+    const preview = previewApiResponse();
+    if (preview) return preview;
     try {
       assertSameOriginMutation(request);
       if (request.headers.get("content-type")?.split(";", 1)[0] !== "application/json") return bffError(400, "INVALID_REQUEST");

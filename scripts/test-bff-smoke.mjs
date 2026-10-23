@@ -31,7 +31,7 @@ try {
   const frontendOrigin = `http://127.0.0.1:${frontendPort}`;
 
   frontendProcess = startFrontend(frontendPort, {
-    BACKEND_URL: backendOrigin,
+    FRONTEND_MODE: "live", BACKEND_URL: backendOrigin,
     BFF_PUBLIC_ORIGIN: frontendOrigin,
     BFF_AUTH_SECRET: bffAuthSecret,
     BFF_SESSION_SECRET: bffSessionSecret,

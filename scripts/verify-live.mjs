@@ -15,7 +15,7 @@ assert.ok(email && password, "Configure a disposable LIVE_PLAYER_EMAIL/PASSWORD 
 const readiness = await fetch(new URL("/readyz", backendOrigin), { signal: AbortSignal.timeout(5000) });
 assert.equal(readiness.status, 200, "Backend PostgreSQL must be ready.");
 const child = spawn(process.execPath, [resolve("node_modules/next/dist/bin/next"), "start", "--hostname", "127.0.0.1", "--port", new URL(frontendOrigin).port], {
-  env: { ...process.env, BACKEND_URL: backendOrigin, BFF_PUBLIC_ORIGIN: frontendOrigin,
+  env: { ...process.env, FRONTEND_MODE: "live", BACKEND_URL: backendOrigin, BFF_PUBLIC_ORIGIN: frontendOrigin,
     BFF_SESSION_SECRET: process.env.BFF_SESSION_SECRET ?? randomBytes(32).toString("base64url"), NODE_ENV: "production" },
   windowsHide: true, stdio: "ignore",
 });

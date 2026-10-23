@@ -11,7 +11,9 @@
     "typecheck": "next typegen && tsc --noEmit",
     "test:unit": "vitest run",
     "test:bff": "node scripts/test-bff-smoke.mjs",
-    "test:e2e": "playwright test"
+    "test:e2e": "npm run test:e2e:preview && npm run test:e2e:live",
+    "test:e2e:preview": "playwright test",
+    "test:e2e:live": "playwright test --config playwright.live.config.ts"
   },
   "engines": {
     "node": ">=22.0.0"

@@ -1,3 +1,4 @@
+import { previewApiResponse } from "@/features/backend/frontend-mode";
 import { issueBffServiceToken } from "../../../../features/backend/bff-authorization";
 import { bffError, bffJson } from "../../../../features/backend/bff-response";
 import { assertSameOriginMutation } from "../../../../features/backend/csrf";
@@ -16,6 +17,8 @@ export async function GET(
   _request: Request,
   context: RouteContext<"/api/instances/[id]">,
 ): Promise<Response> {
+  const preview = previewApiResponse();
+  if (preview) return preview;
   try {
     const instanceId = readInstanceId((await context.params).id);
     if (!instanceId) return bffError(400, "INVALID_REQUEST");
@@ -31,6 +34,8 @@ export async function DELETE(
   request: Request,
   context: RouteContext<"/api/instances/[id]">,
 ): Promise<Response> {
+  const preview = previewApiResponse();
+  if (preview) return preview;
   try {
     assertSameOriginMutation(request);
     const instanceId = readInstanceId((await context.params).id);

@@ -18,8 +18,10 @@ import { LearningArt } from "./learning-art";
 import { ProgressOverview } from "./progress-overview";
 import { SkillProgress } from "./skill-progress";
 import styles from "./dashboard.module.css";
+import { useAuth } from "@/features/auth/provider";
 
 export function Dashboard() {
+  const { mode } = useAuth();
   const { learner, ready } = useLearner();
   const now = useClock();
   if (!ready) return <p role="status">Getting your demo ready…</p>;
@@ -34,7 +36,7 @@ export function Dashboard() {
             Join the demo <ArrowRight size={16} />
           </Link>
         </Button>
-        <Link href="/labs">Or browse the published labs →</Link>
+        <Link href="/labs">{mode === "preview" ? "Or browse the sample labs →" : "Or browse the published labs →"}</Link>
       </section>
     );
   const { today } = activity(learner, now);
@@ -62,7 +64,7 @@ export function Dashboard() {
                 <Sparkles size={14} /> YOUR NEXT SMALL WIN
               </span>
               <h2>Your next discovery awaits.</h2>
-              <p>Browse the published catalog. Live lab sessions require a backend account; this dashboard’s progress is still a separate demo.</p>
+              <p>{mode === "preview" ? "Explore 12 sample labs and find a topic that sparks your curiosity. Session and completion controls are coming in the next phase." : "Browse the published catalog. Live lab sessions require a backend account; this dashboard’s progress is still a separate demo."}</p>
               <Button asChild>
                 <Link href="/labs">Explore labs <ArrowRight size={16} /></Link>
               </Button>

@@ -7,6 +7,7 @@ import { ArrowRight, Sprout, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { enterDemo, useLearner } from "./store";
 import { DemoNotice } from "./demo-notice";
+import { safeDestination } from "@/features/auth/client";
 import styles from "./learner.module.css";
 
 export function Signup({ destination }: { destination: string }) {
@@ -55,7 +56,7 @@ export function Signup({ destination }: { destination: string }) {
               setError("Use 2–24 letters, numbers, underscores, or hyphens.");
               return;
             }
-            router.push(destination);
+            router.push(safeDestination(destination));
           }}
         >
           <label htmlFor="username">Username</label>
@@ -63,6 +64,7 @@ export function Signup({ destination }: { destination: string }) {
             key={ready ? (learner.username ?? "new") : "loading"}
             id="username"
             name="username"
+            disabled={!ready}
             defaultValue={ready ? (learner.username ?? "") : ""}
             placeholder="e.g. curious_owl"
             autoComplete="off"

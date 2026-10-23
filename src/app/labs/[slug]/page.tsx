@@ -4,9 +4,17 @@ import { ReadError } from "@/features/backend/read-error";
 import { readChallenge } from "@/features/catalog/server";
 import { toLiveLab } from "@/features/catalog/live";
 import { LabBriefing } from "@/features/briefing/lab-briefing";
+import { getFrontendMode } from "@/features/backend/frontend-mode";
+import { getPreviewLab } from "@/features/catalog/preview";
+import { PreviewBriefing } from "@/features/briefing/preview-briefing";
 export const dynamic = "force-dynamic";
 export default async function Page({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
+  if (getFrontendMode() === "preview") {
+    const lab = getPreviewLab(slug);
+    if (!lab) notFound();
+    return <PreviewBriefing lab={lab} />;
+  }
   let challenge;
   try { challenge = await readChallenge(slug); }
   catch (error) {

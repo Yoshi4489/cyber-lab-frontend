@@ -22,10 +22,12 @@ export function Catalog({
   labs,
   savedOnly = false,
   categories,
+  preview = false,
 }: {
   labs: (Lab | LiveLab)[];
   categories: string[];
   savedOnly?: boolean;
+  preview?: boolean;
 }) {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("All labs");
@@ -71,7 +73,7 @@ export function Catalog({
           <p>
             {savedOnly
               ? "A little inspiration for your next session."
-              : "Browse the published challenge catalog."}
+              : preview ? "Explore 12 sample labs. All activity in this preview is simulated." : "Browse the published challenge catalog."}
           </p>
         </div>
         {!savedOnly && (
@@ -173,7 +175,7 @@ export function Catalog({
             onChange={(e) => setSort(e.target.value)}
           >
             <option value="recommended">Title</option>
-            <option value="points">Highest points</option>
+            <option value="points">{preview ? "Highest demo XP" : "Highest points"}</option>
           </select>
         </label>
       </div>
@@ -214,7 +216,7 @@ export function Catalog({
         </div>
       )}
       <p className={styles.disclaimer}>
-        Published catalog · availability and scores are provided by the backend.
+        {preview ? "Demo catalog · sample content and illustrative XP. No targets or real scores." : "Published catalog · availability and scores are provided by the backend."}
       </p>
     </section>
   );
