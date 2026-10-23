@@ -10,12 +10,15 @@ vulnerable challenges, spawn a private isolated target on demand, attack it,
 and submit a flag to score points. Comparable to HackTheBox or TryHackMe.
 
 Status: the CiscoKU Lab frontend uses Next.js App Router at the repository root.
-Phase 1 defaults to a fully isolated preview: username-only entry, 12 validated
-sample labs and local navigation, with an honest temporary session explanation.
+The default is a fully isolated preview: username-only entry, 12 validated
+sample labs, and simulated lifecycle/completion with once-only local rewards.
 Server-only `FRONTEND_MODE=live` retains the existing BFF auth, database catalog,
 and instance controls. Preview returns 404 for all backend-facing API handlers
-before cookies, credentials, or upstream requests. Simulated session controls,
-consistent progress/Profile, and backend capacity/cleanup are later phases.
+before cookies, credentials, or upstream requests. Demo sessions use generated
+DTOs, one active session, a saved 60-minute expiry, 30-minute extensions and a
+two-hour cap. Version 1 learner state migrates identity/completions while dropping
+old sessions. Consistent progress/Profile and backend orphan cleanup remain later
+phases; backend capacity is tracked separately in the sibling repository.
 Read the current delivery checkpoint in `PLAN.md` before future phases.
 
 This is the **frontend repository**. The independent backend is in the sibling

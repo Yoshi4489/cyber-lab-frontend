@@ -9,14 +9,14 @@ presentation and the server-only browser-facing backend-for-frontend (BFF).
 
 Phase 1 on 2026-10-23 makes the default learner experience an isolated preview:
 username-only entry, local identity and navigation, 12 editorial samples,
-briefings, bookmarks, and sample recommendations. Session routes show an honest
-placeholder until Phase 2. Dashboard progress and rankings remain browser-local
+briefings, bookmarks, and sample recommendations. Phase 2 adds simulated session
+controls and once-only demo completion. Dashboard progress and rankings remain browser-local
 demo state; Profile and Learning Paths remain placeholders until their planned
 delivery. Explicit live mode retains the existing real login, email forms,
 catalog, and lab controls through server-only adapters. Neither mode establishes
 hosted acceptance, runtime isolation, or production launch readiness.
 
-**The contract diff was approved on 2026-10-23. Phase 1 is implemented;
+**The contract diff was approved on 2026-10-23. Phases 1 and 2 are implemented;
 later phases remain pending approval.**
 The approved specification is in the backend's [API contract](../cyber-range-backend/docs/API.md).
 It supersedes the older frontend-only assumptions about Better Auth, database
@@ -41,9 +41,8 @@ In preview mode, catalog pages, briefings, recommendations, saved labs,
 navigation, and sign-in use the existing 12 editorial samples and local demo
 identity. `/login` and `/signup` share username-only entry; verification and
 password-reset pages explain the simulated account boundary and collect no
-credentials for processing. Session routes currently explain the pending
-controls without a target URL or flag. Phase 2 will simulate lifecycle states
-and add "Finish demo" completion with once-only demo points.
+credentials for processing. Session routes simulate lifecycle states without a
+target URL or flag and provide "Finish demo" completion with once-only demo points.
 
 All backend-facing frontend `/api` handlers return HTTP 404 `NOT_FOUND` before
 credential access, cookie resolution, or upstream requests. This includes the
@@ -63,12 +62,20 @@ primitives, light/dark/system themes, keyboard navigation, and reduced-motion
 support. Keep route files thin and components/styles beside their features.
 
 Preview state is versioned and Zod-validated. The existing learner store uses
-`ciscoku:learner:v1`; implementation will migrate valid usernames and known
+`ciscoku:learner:v1` with a version 2 payload; reads migrate valid usernames and known
 completions while discarding legacy active simulations. Preserve bookmarks
 under `cyber-range:saved-labs:v1` and theme preference under `ciscoku:theme`.
-Phase 2 mock sessions will permit one active instance, use absolute expiry
+Phase 2 mock sessions permit one active instance, use absolute expiry
 timestamps, start with 60 minutes, and extend by 30 minutes up to two hours after
-creation. Refresh must not restart the timer; expired sessions cannot be completed.
+creation. Refresh does not restart the timer; expired sessions cannot be completed.
+Web Locks serialize commands across supported same-origin browser tabs; storage
+failure falls back to the current tab. Validated instance/mutation/submission
+DTOs follow the generated contract. Mutation retries retain their operation ID
+and return the current instance state. Completion records points once per lab;
+replay returns zero additional points. No flag is produced or submitted.
+Each demo entry rotates an internal local identity nonce. Commands capture it
+before queueing and recheck it under the lock, so sign-out, reset and reentry
+cancel stale actions even when the same username is reused.
 
 Preview sign-out clears active simulations but retains progress. Explicit reset
 clears learner progress. A different username starts fresh. Invalid storage
@@ -151,10 +158,13 @@ Scoring transactions award fixed challenge points once per user/challenge.
 Decaying scores, hints, global first-blood recognition, and flag-sharing review
 are future work. Real submissions require an owned running, unexpired instance.
 
-The new capacity and orphan-reconciliation work must count outstanding resources
-until confirmed cleanup and avoid deleting unrelated resources or trusted
-ingress. It must fail closed on unavailable inventory/database evidence and
-serialize maintenance with lifecycle execution. Multiple workers and multi-node
+Phase 2 capacity admission counts reservations and outstanding resources until
+confirmed cleanup under a per-node database lock. Explicit worker capacity is
+required; excess spawns fail asynchronously with `node_capacity_exhausted`.
+Read-only inventory fails closed on missing or ambiguous ownership evidence.
+Phase 3 orphan cleanup must preserve unrelated resources and trusted ingress,
+abort on unavailable evidence, and serialize maintenance with lifecycle execution.
+Multiple workers and multi-node
 scheduling remain deferred.
 
 ## Verification and launch limits

@@ -19,9 +19,11 @@ backend remains available through an explicitly enabled live integration.
   registration remains closed.
 - Existing visual design, local artwork/fonts, themes, and responsive navigation.
 
-Phase 1 is implemented. Preview sessions currently explain the upcoming controls;
-they do not start a timer, run a target, or award XP. Simulated lifecycle and
-completion arrive in Phase 2; consistent progress/Profile follow in Phase 3.
+Phase 2 adds simulated start, preparation, running, extension, stop, expiry,
+completion and replay. A demo starts with 60 minutes; extensions add 30 minutes
+up to two hours from the original start. Refresh preserves that absolute expiry.
+Finish demo records one illustrative reward per lab; replay awards zero extra XP.
+Consistent progress/Profile follow in Phase 3.
 Existing saved progress and fictional rankings remain illustrative. Learning
 Paths and Profile remain previews. Demo identity never authorizes a backend
 operation or records a real solve.
@@ -141,7 +143,7 @@ gates in [`SECURITY.md`](SECURITY.md) are complete.
 
 | Storage key | Purpose |
 |---|---|
-| `ciscoku:learner:v1` | Demo username, sign-in state, unique completions, session timestamps |
+| `ciscoku:learner:v1` | Version 2 local payload: demo identity, unique completions, one owned simulated instance, last result, and idempotent command records |
 | `cyber-range:saved-labs:v1` | Existing browser bookmarks, preserved across the redesign |
 | `ciscoku:theme` | System/light/dark preference |
 | `ciscoku:active-instance:v1` | Only instance/challenge IDs; ownership and current state are revalidated by the BFF |
@@ -151,9 +153,21 @@ Instance mutation retry keys are stored separately in session storage under
 authentication credentials. Logout clears the remembered instance; terminal
 statuses stop polling and clear it too.
 
-Simulated completion controls are pending Phase 2; no completion is awarded
-from the Phase 1 session explanation.
-XP and levels still displayed in the demo dashboard are derived from old catalog
+Preview sessions use validated generated-contract instance and submission DTOs,
+with their demo origin recorded separately. They never create a target, URL,
+flag, or real account, and never call the BFF. One active demo may span browser
+tabs; Web Locks serialize commands where available. Without persistent storage,
+the same-tab fallback remains usable with a visible warning.
+Each local sign-in has a random session generation; queued commands from an
+earlier generation are rejected, including signing out and back in with the
+same username. This value is local demo bookkeeping, not backend authorization.
+
+The existing learner key automatically migrates valid version 1 usernames and
+known completions into version 2, discarding all legacy active simulations.
+Sign out clears active simulations and retry records while retaining progress;
+a different username starts fresh. The explicit reset also clears progress.
+Bookmarks and theme preferences remain untouched by all three actions.
+XP and levels still displayed in the demo dashboard are derived from sample catalog
 fixtures and unique local completions, not from backend solves. These
 are illustrative reward rules, not production scoring policy. The same username
 resumes local progress; entering a different username starts a fresh demo.

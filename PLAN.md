@@ -8,7 +8,7 @@ a "Finish demo" button. Keep the current visual design and dependencies.
 Retain explicit live mode for separate integration tests; default preview must
 never call the backend, even when backend configuration is present.
 
-**Checkpoint: contract approved on October 23; Phase 1 complete, awaiting Phase 2 approval.**
+**Checkpoint: contract approved on October 23; Phases 1 and 2 complete, awaiting Phase 3 approval.**
 The approved boundary and backend semantics are in
 `../cyber-range-backend/docs/API.md` and the reconciled `ARCHITECTURE.md`.
 Exactly two implementation agents are authorized: frontend-only changes in this
@@ -41,10 +41,43 @@ all 19 tests. Both temporary clusters were removed; the demo database was not
 migrated or modified. No real target, email, or hosted service was created.
 Backend implementation is recorded in local commit `9855839`; no push was made.
 
-Phase 2 has not started. Preview session pages deliberately explain the pending
-controls without timers, targets, or completion awards. Capacity admission and
-schema changes remain pending. Next approval authorizes those two workstreams
-only, followed by another phase report and pause.
+The user approved Phase 2 and clarified the product goal: a playable web CTF
+platform where each learner can spawn a private web challenge. "VM" here means
+the isolated web lab, consistent with the existing Docker target architecture.
+Mock sessions are an intermediate milestone. Phase 2 implements their controls
+and completion alongside backend capacity limits, followed by a report and pause.
+
+Phase 2 verification: frontend lint/typecheck/build, BFF smoke, 103 unit tests,
+and all 117 browser checks passed (39 preview and 78 explicit-live). These cover
+refresh-persistent expiry, initial/extended/absolute limits, once-only completion
+and zero-point replay, migration, sign-out/reset, malformed or denied storage,
+cross-tab starts and stale queued commands after identity changes, including
+same-username reentry. The combined desktop/tablet/mobile light/dark visual pass
+found no layout issues. An internal local sign-in nonce cancels queued work;
+it is not a backend credential. No preview action creates a target or flag.
+
+Backend lint/typecheck/build passed with 185 tests passing and five Redis queue
+tests skipped. Capacity migration `ca700b8` and behavior `b888b9b` are separate
+commits. An independent existing-node upgrade test confirmed backfill to one
+slot and positive-value enforcement. Read-only Docker/router fixtures cover
+partial and orphan resources, duplicate or stripped labels, and failed reads;
+real isolated Docker/Redis acceptance remains open for Phase 4. The disposable
+PostgreSQL cluster was stopped and removed without touching the demo database.
+Generated frontend types exactly match all 20 current backend paths.
+
+Phase 3 has not started. Next approval covers consistent mock progress,
+fictional rankings, read-only Profile and guide, plus safe serialized backend
+orphan cleanup. No hosted configuration or deployment was changed in Phase 2.
+
+After these four delivery phases, plan a separate live CTF milestone: author a
+reviewed beginner web challenge and solve check; connect real learner sessions,
+flag submissions and persisted progress; provision and verify isolated worker
+and ingress connectivity; and exercise login, spawn, solve, scoring, expiry and
+cleanup through the hosted frontend. The intended endpoints supplied by the user
+are https://cyber-lab-frontend.vercel.app and
+https://cyber-range-api.onrender.com. Their existence alone does not prove worker
+reachability or playable targets. This milestone is not implemented or approved
+for deployment by the mock-first Phase 2 approval.
 
 Scope is local development and disposable fixtures. Real CTF content, admin
 tools, advanced access/scaling, hosting work, and host-level egress anomaly
