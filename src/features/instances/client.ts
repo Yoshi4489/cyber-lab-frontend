@@ -1,6 +1,7 @@
 "use client";
 import { z } from "zod";
 import { requestBff, type ApiErrorCode, type ApiResult } from "../backend/client";
+import type { operations } from "../backend/generated/openapi";
 
 /**
  * Browser-side client for the same-origin instance BFF. It never sends an
@@ -19,7 +20,7 @@ const instanceStatuses = [
   "expired",
 ] as const;
 
-const instanceSchema = z
+export const instanceSchema: z.ZodType<Instance> = z
   .object({
     id: z.uuid(),
     challengeId: z.uuid(),
@@ -41,7 +42,7 @@ const instanceSchema = z
       });
     }
   });
-const mutationSchema = z
+export const mutationSchema: z.ZodType<InstanceMutation> = z
   .object({
     instance: instanceSchema,
     operationId: z.uuid(),
@@ -53,8 +54,8 @@ const uuidPattern =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export type InstanceStatus = (typeof instanceStatuses)[number];
-export type Instance = z.infer<typeof instanceSchema>;
-export type InstanceMutation = z.infer<typeof mutationSchema>;
+export type Instance = operations["getInstance"]["responses"][200]["content"]["application/json"];
+export type InstanceMutation = operations["createInstance"]["responses"][202]["content"]["application/json"];
 export type InstanceOperation = "create" | "extend" | "destroy";
 /** `UNREACHABLE` and `MALFORMED` are client-side outcomes, not backend codes. */
 export type InstanceErrorCode = ApiErrorCode;
