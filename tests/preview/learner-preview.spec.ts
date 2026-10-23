@@ -40,9 +40,9 @@ test("username-only entry returns to the session preview and local navigation si
   await page.getByLabel("Username", { exact: true }).fill("preview_owl");
   await page.getByRole("button", { name: "Continue", exact: true }).click();
   await expect(page).toHaveURL(/\/labs\/cookie-monster\/session$/);
-  await expect(page.getByRole("region", { name: "Demo session" })).toContainText("No target is running and no XP has been awarded.");
+  await expect(page.getByRole("region", { name: "Demo session" })).toContainText("There is no real challenge to attack in this preview.");
   await page.reload();
-  await expect(page.getByText(/Welcome, preview_owl/)).toBeVisible();
+  await expect(page.getByRole("button", { name: "Start demo", exact: true })).toBeVisible();
   await page.getByLabel("Color theme", { exact: true }).selectOption("dark");
   if (isMobile) await page.getByRole("button", { name: "Open navigation" }).click();
   await expect(page.getByText("Demo learner · this browser", { exact: true }).last()).toBeVisible();

@@ -64,7 +64,7 @@ export function Dashboard() {
                 <Sparkles size={14} /> YOUR NEXT SMALL WIN
               </span>
               <h2>Your next discovery awaits.</h2>
-              <p>{mode === "preview" ? "Explore 12 sample labs and find a topic that sparks your curiosity. Session and completion controls are coming in the next phase." : "Browse the published catalog. Live lab sessions require a backend account; this dashboard’s progress is still a separate demo."}</p>
+              <p>{mode === "preview" ? "Explore 12 sample labs and find a topic that sparks your curiosity. Try a simulated session and finish the demo to record sample progress." : "Browse the published catalog. Live lab sessions require a backend account; this dashboard’s progress is still a separate demo."}</p>
               <Button asChild>
                 <Link href="/labs">Explore labs <ArrowRight size={16} /></Link>
               </Button>

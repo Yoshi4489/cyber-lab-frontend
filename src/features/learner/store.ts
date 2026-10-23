@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useSyncExternalStore } from "react";
 import {
   emptyLearner,
   readLearner,
@@ -41,7 +41,17 @@ function write(next: Learner) {
   window.dispatchEvent(new Event(changeEvent));
 }
 export function updateLearner(update: (current: Learner) => Learner) {
-  write(update(readLearner(snapshot())));
+  transactLearner(current => ({ learner: update(current), value: undefined }));
+}
+export function readLocalLearner(): Learner {
+  return readLearner(snapshot());
+}
+export function transactLearner<T>(update: (current: Learner) => { learner: Learner; value: T }): T {
+  const raw = snapshot();
+  const current = readLearner(raw);
+  const result = update(current);
+  if (JSON.stringify(result.learner) !== raw) write(result.learner);
+  return result.value;
 }
 const serverSnapshot = () => null;
 const readySnapshot = () => true;
@@ -52,6 +62,11 @@ export function useLearner() {
   const ready = useSyncExternalStore(subscribe, readySnapshot, notReady);
   const temporary = useSyncExternalStore(subscribe, storageError, notReady);
   const learner = useMemo(() => readLearner(raw), [raw]);
+  useEffect(() => {
+    try {
+      if (ready && raw !== null && JSON.parse(raw).version === 1 && snapshot() === raw) write(learner);
+    } catch { /* Invalid storage is read as an empty learner. */ }
+  }, [raw, ready, learner]);
   return { learner, ready, temporary };
 }
 export function enterDemo(name: string) {
@@ -61,11 +76,12 @@ export function enterDemo(name: string) {
     ...(current.username === parsed.data ? current : emptyLearner),
     username: parsed.data,
     signedIn: true,
+    identityEpoch: crypto.randomUUID(),
   }));
   return true;
 }
 export function leaveDemo() {
-  updateLearner((current) => ({ ...current, signedIn: false, sessions: {} }));
+  updateLearner((current) => ({ ...current, signedIn: false, identityEpoch: null, activeSession: null, lastSession: null, commands: {} }));
 }
 export function resetDemo() {
   write(emptyLearner);

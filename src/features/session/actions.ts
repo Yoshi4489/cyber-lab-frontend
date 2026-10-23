@@ -1,52 +1,23 @@
 "use client";
-import { getLab } from "@/features/catalog/data";
-import { updateLearner } from "@/features/learner/store";
+import { readLocalLearner, transactLearner } from "@/features/learner/store";
+import { advancePreview, applyPreviewCommand, type PreviewCommand, type PreviewCommandResult } from "./preview-model";
 
-export function startSession(slug: string) {
-  const lab = getLab(slug);
-  if (!lab) return;
-  const now = Date.now();
-  updateLearner((current) => {
-    if (!current.signedIn) return current;
-    const existing = current.sessions[slug];
-    if (existing && existing.expiresAt > now) return current;
-    return {
-      ...current,
-      sessions: {
-        ...current.sessions,
-        [slug]: { startedAt: now, expiresAt: now + lab.minutes * 60_000 },
-      },
-    };
-  });
+// Web Locks serialize the read/update/write across same-origin browser tabs.
+// A synchronous transaction also keeps the current tab usable without storage
+// or Web Locks; this local demo never confers server authorization.
+async function locked<T>(action: () => T): Promise<T> {
+  return navigator.locks ? navigator.locks.request("ciscoku:preview-session", action) : action();
 }
-export function finishSession(slug: string) {
-  const now = Date.now();
-  updateLearner((current) => {
-    const session = current.sessions[slug];
-    if (
-      !current.signedIn ||
-      !getLab(slug) ||
-      !session ||
-      session.expiresAt <= now
-    )
-      return current;
-    const sessions = { ...current.sessions };
-    delete sessions[slug];
-    return {
-      ...current,
-      sessions,
-      completions: {
-        ...current.completions,
-        [slug]: current.completions[slug] ?? now,
-      },
-    };
-  });
+export function runPreviewCommand(command: PreviewCommand): Promise<PreviewCommandResult> {
+  const { username, signedIn, identityEpoch } = readLocalLearner();
+  // Bind queued work to the local sign-in that initiated it. A new nonce also
+  // cancels stale work after signing out and back in with the same username.
+  const actor = { username, signedIn, identityEpoch };
+  return locked(() => transactLearner(current => {
+    const { learner, result } = applyPreviewCommand(current, command, Date.now(), undefined, actor);
+    return { learner, value: result };
+  }));
 }
-export function stopSession(slug: string) {
-  updateLearner((current) => {
-    if (!current.signedIn) return current;
-    const sessions = { ...current.sessions };
-    delete sessions[slug];
-    return { ...current, sessions };
-  });
+export function advancePreviewSessions(now: number) {
+  return locked(() => transactLearner(current => ({ learner: advancePreview(current, now), value: undefined })));
 }

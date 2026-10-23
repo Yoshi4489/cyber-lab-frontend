@@ -24,10 +24,10 @@ export function PreviewBriefing({ lab }: { lab: Lab }) {
       <aside className={styles.aside}>
         <section className={styles.launch}><span className={styles.icon}><FlaskConical size={27} /></span>
           <span className={styles.label}>DEMO LAB · SAMPLE CONTENT</span><h2>Let curiosity lead the way.</h2>
-          <p>Explore this sample briefing and preview the session space. Simulated session controls are coming in the next phase.</p>
+          <p>Try a simulated session, explore its controls, and finish the demo to record sample progress.</p>
           <StartLab slug={lab.slug} />
           <small>No real target, account, or flag is created.</small>
-          <p className={styles.once}>XP is illustrative. Completion controls are not available yet.</p>
+          <p className={styles.once}>XP is illustrative and awarded once per sample lab.</p>
         </section>
         <section className={styles.skills}><h2>Skills in focus</h2><div>{lab.tags.map(tag => <span key={tag}>{tag}</span>)}</div></section>
       </aside>

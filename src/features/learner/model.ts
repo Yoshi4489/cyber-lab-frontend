@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { getLab, labs } from "@/features/catalog/data";
+import { previewSessionSchema, previewCommandRecordSchema, isValidPreviewSession } from "@/features/session/preview-model";
 
 const username = z
   .string()
@@ -9,42 +10,55 @@ const username = z
   .regex(/^[a-zA-Z0-9_-]+$/);
 export const usernameSchema = username;
 const timestamp = z.number().finite().nonnegative().max(8.64e15);
-export const learnerSchema = z.object({
-  version: z.literal(1),
+const identitySchema = z.object({
   username: username.nullable(),
   signedIn: z.boolean(),
-  completions: z.record(z.string(), timestamp),
-  sessions: z.record(
-    z.string(),
-    z.object({ startedAt: timestamp, expiresAt: timestamp }),
-  ),
+  completions: z.record(z.string(), z.unknown()),
 });
-export type Learner = z.infer<typeof learnerSchema>;
+export const learnerSchema = identitySchema.extend({
+  version: z.literal(2),
+  identityEpoch: z.uuid().nullable().default(null),
+  activeSession: previewSessionSchema.nullable().catch(null),
+  lastSession: previewSessionSchema.nullable().catch(null),
+  commands: z.record(z.string(), previewCommandRecordSchema).catch({}),
+});
+const legacySchema = identitySchema.extend({ version: z.literal(1) });
+export type Learner = Omit<z.infer<typeof learnerSchema>, "completions"> & { completions: Record<string, number> };
 export const emptyLearner: Learner = {
-  version: 1,
+  version: 2,
+  identityEpoch: null,
   username: null,
   signedIn: false,
   completions: {},
-  sessions: {},
+  activeSession: null,
+  lastSession: null,
+  commands: {},
 };
 
 export function readLearner(raw: string | null): Learner {
   try {
-    const result = learnerSchema.safeParse(JSON.parse(raw ?? "null"));
+    const input = JSON.parse(raw ?? "null");
+    const result = input?.version === 1 ? legacySchema.safeParse(input) : learnerSchema.safeParse(input);
     if (!result.success) return emptyLearner;
     const data = result.data;
     return {
-      ...data,
+      ...emptyLearner,
+      username: data.username,
       signedIn: Boolean(data.signedIn && data.username),
       completions: Object.fromEntries(
-        Object.entries(data.completions).filter(([slug]) => getLab(slug)),
+        Object.entries(data.completions).flatMap(([slug, time]) => {
+          const parsed = timestamp.safeParse(time);
+          return getLab(slug) && parsed.success ? [[slug, parsed.data]] : [];
+        }),
       ),
-      sessions: Object.fromEntries(
-        Object.entries(data.sessions).filter(
-          ([slug, session]) =>
-            getLab(slug) && session.expiresAt > session.startedAt,
-        ),
-      ),
+      ...("activeSession" in data && data.signedIn && data.username ? {
+        identityEpoch: data.identityEpoch,
+        activeSession: data.activeSession && isValidPreviewSession(data.activeSession, data.username)
+          && ["pending", "provisioning", "running", "stopping"].includes(data.activeSession.instance.status) ? data.activeSession : null,
+        lastSession: data.lastSession && isValidPreviewSession(data.lastSession, data.username)
+          && ["stopped", "failed", "expired"].includes(data.lastSession.instance.status) ? data.lastSession : null,
+        commands: data.commands,
+      } : {}),
     };
   } catch {
     return emptyLearner;

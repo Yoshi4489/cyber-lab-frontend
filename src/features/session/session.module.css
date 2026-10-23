@@ -125,6 +125,12 @@
   color: var(--muted-foreground);
   margin: 12px 0 18px;
 }
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
 .notice {
   font-size: 11px;
   line-height: 1.8;

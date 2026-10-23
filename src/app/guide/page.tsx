@@ -37,16 +37,16 @@ export default function GuidePage() {
           <FlaskConical size={24} />
           <h2>Try a simulated session.</h2>
           <p>
-            {preview ? "The session page is a preview for now. Timers, start, stop, and Finish demo controls are coming in the next phase. No server or target is created." : "Live sessions use the backend account and instance controls. No demo username authorizes a real target."}
+            {preview ? "Start demo moves through simulated preparation to a running timer. You can extend by 30 minutes, up to two hours from the original start, or stop at any time. The original expiry survives refresh. No server or target is created." : "Live sessions use the backend account and instance controls. No demo username authorizes a real target."}
           </p>
         </section>
         <section>
           <Sparkles size={24} />
           <h2>Watch small wins add up.</h2>
           <p>
-            Demo progress and rewards are illustrative; existing completions stay
-            in this browser. Completion controls are coming in the next phase.
-            Leaderboard classmates are fictional.
+            Finish demo simulates a successful solve and records illustrative XP
+            once per sample lab. Replays award no extra XP. Progress stays in this
+            browser; leaderboard classmates are fictional.
           </p>
         </section>
         <section>
