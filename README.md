@@ -1,29 +1,32 @@
 # CiscoKU Lab — frontend
 
 A free university security learning website, designed for curious learners.
-The frontend is being integrated with the independent backend in verified,
-separate pushes.
+The default learner experience is a local, simulated preview. The independent
+backend remains available through an explicitly enabled live integration.
 
 ## Current delivery
 
-- Real account login, encrypted HttpOnly BFF sessions, logout, email verification,
-  and password recovery. Public account registration remains closed.
-- Published database catalog, search/filter/sort, bookmarks, backend briefings,
-  and published recommendations on the home and demo dashboard.
-- Learner HTTP instance controls at `/labs/[slug]/session`: start, poll, resume
-  by a revalidated ID, extend, and stop. Target links appear only while running.
-- Shared typed browser/server HTTP layers, stable error handling, and loading,
-  empty, retry, and storage-failure states.
+- Server-only `FRONTEND_MODE=preview|live`, defaulting to `preview`. Any other
+  value fails closed into preview. Browser input cannot enable live services.
+- Username-only entry at `/login` and `/signup`, browser-local identity,
+  12 contract-validated sample labs, saved labs, editorial briefings, and sample
+  home/dashboard recommendations. No backend configuration is needed.
+- Preview API routes return no-store `404 NOT_FOUND` before credentials,
+  cookies, or upstream work. `/instances` stays unavailable. Email/reset pages
+  explain simulated accounts and collect no credentials or tokens.
+- Explicit live mode retains backend login, encrypted HttpOnly BFF sessions,
+  the published catalog and start/poll/extend/stop controls. Public account
+  registration remains closed.
 - Existing visual design, local artwork/fonts, themes, and responsive navigation.
 
-Integration is not complete. Dashboard identity/progress, the sidebar account,
-and the leaderboard are still clearly labeled browser-local demos. Learning
+Phase 1 is implemented. Preview sessions currently explain the upcoming controls;
+they do not start a timer, run a target, or award XP. Simulated lifecycle and
+completion arrive in Phase 2; consistent progress/Profile follow in Phase 3.
+Existing saved progress and fictional rankings remain illustrative. Learning
 Paths and Profile remain previews. Demo identity never authorizes a backend
-operation or records a real solve. `/signup` is demo-only username onboarding,
-not public account registration. Real accounts sign in at `/login`.
+operation or records a real solve.
 
-Remaining groups: backend account navigation, submissions and progress/profile,
-the database leaderboard, and real isolated-worker/ingress acceptance. The
+Live submissions/progress UI and database rankings remain unfinished. The
 loopback fixture verifies frontend behavior; it does not establish runtime
 isolation, worker availability, or production launch readiness.
 
@@ -38,9 +41,13 @@ npm ci
 npm run dev
 ```
 
-Open **http://127.0.0.1:3000**. Fonts and artwork are local. Configure the
-server-only variables listed below in an ignored `.env.local` and start the
-backend separately using its README. The default API origin is
+Open **http://127.0.0.1:3000** and choose a demo username. Fonts, artwork, sample
+labs, and preview identity are local; no backend is required. Backend settings
+and old live cookies are ignored while in preview.
+
+For separate live integration testing, explicitly set server-only
+`FRONTEND_MODE=live`, configure the variables below in an ignored `.env.local`,
+and start the backend separately using its README. The default API origin is
 `http://127.0.0.1:4000`; this repository does not start or modify backend services.
 Set `BFF_PUBLIC_ORIGIN=http://127.0.0.1:3000` for the default frontend command.
 Use a provisioned test account at `/login`, then browse the published catalog.
@@ -78,8 +85,10 @@ does not assume a deployment URL or import backend source.
 
 ### BFF authentication
 
-The browser must use the same-origin frontend BFF; it must never call the backend
-directly or send an acting user ID. The server-only BFF exposes:
+In explicit live mode, the browser uses the same-origin frontend BFF; it must
+never call the backend directly or send an acting user ID. In preview, every
+handler below returns `404 NOT_FOUND` without accessing live credentials/cookies.
+The live BFF exposes:
 
 | Endpoint | Behavior |
 |---|---|
@@ -105,6 +114,7 @@ in the host's secret manager (never in `NEXT_PUBLIC_*` variables):
 
 | Variable | Purpose |
 |---|---|
+| `FRONTEND_MODE` | Server-only. `preview` (default) uses local fixtures; only exact `live` enables backend requests. Invalid values remain preview. Read at request time, so one production build supports both modes. |
 | `BACKEND_URL` | Credential-free backend API origin; production requires HTTPS outside loopback. |
 | `BFF_PUBLIC_ORIGIN` | Exact browser-facing frontend origin used for mutation-origin validation; production requires HTTPS outside loopback. |
 | `BFF_AUTH_SECRET` | Shared backend bootstrap credential for login, session resolution, and logout. |
@@ -119,7 +129,7 @@ file, token, certificate, or flag to Git.
 
 `/instances` is an operator surface for the instance lifecycle: spawn, poll,
 extend, and destroy one target through the BFF. It exists only when
-`LIVE_INSTANCE_UI=true`, is never linked from the demo navigation, and carries a
+`FRONTEND_MODE=live` and `LIVE_INSTANCE_UI=true`, is never linked from the demo navigation, and carries a
 banner stating that the header's demo label does not apply to it. It requires a
 backend session established through `/login`. The browser generates and retains
 one idempotency key per logical
@@ -141,7 +151,8 @@ Instance mutation retry keys are stored separately in session storage under
 authentication credentials. Logout clears the remembered instance; terminal
 statuses stop polling and clear it too.
 
-The historical simulated completion controls are no longer on lab pages.
+Simulated completion controls are pending Phase 2; no completion is awarded
+from the Phase 1 session explanation.
 XP and levels still displayed in the demo dashboard are derived from old catalog
 fixtures and unique local completions, not from backend solves. These
 are illustrative reward rules, not production scoring policy. The same username
@@ -185,15 +196,19 @@ npm run test:e2e
 
 Run `test:bff` after `build`. It starts the built frontend and a loopback backend
 on temporary ports, exercises the sealed-session lifecycle and submission path,
-then terminates both. Playwright runs Chrome desktop, tablet, and mobile scenarios
-using ports 3100 and 4101. Neither check starts real targets or contacts your
+then terminates both. `test:e2e` runs preview and explicit-live configurations
+sequentially against the same production build. Preview uses no backend process,
+with backend settings deliberately populated and API calls blocked in browser
+coverage. Live uses the loopback fixture. Both cover Chrome desktop, tablet,
+and mobile; run them individually with `test:e2e:preview` or `test:e2e:live`.
+Ports 3100 and 4101 must be free. Neither starts real targets or contacts your
 configured backend. CI runs the same gates and uploads browser failure reports.
 
 Push one logical group, wait for its CI result, then continue. Keep refactors,
 formatting, dependency changes, and features in separate commits.
 See `AGENTS.md` for commit conventions.
 
-The optional maintainer check is under **Demo guide → Maintainer tools**.
+In explicit live mode, the optional maintainer check is under **Demo guide → Maintainer tools**.
 Set `BACKEND_URL` using the existing environment example if needed. The
 server checks only `/healthz`; API availability does not enable lab execution.
 

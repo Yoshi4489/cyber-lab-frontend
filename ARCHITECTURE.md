@@ -1,271 +1,174 @@
 # Architecture
 
-## Current frontend boundary
+## Current implementation and delivery checkpoint
 
-The Next.js application is at this repository root (`src/app`). The backend is
-an independent sibling repository, `../cyber-range-backend`. The rest of this
-document describes the intended full platform.
+The Next.js application lives at this repository root (`src/app`). The
+independent sibling `../cyber-range-backend` owns accounts, persistence, scoring,
+the lifecycle queue, and the Docker-owning worker. The frontend owns
+presentation and the server-only browser-facing backend-for-frontend (BFF).
+
+Phase 1 on 2026-10-23 makes the default learner experience an isolated preview:
+username-only entry, local identity and navigation, 12 editorial samples,
+briefings, bookmarks, and sample recommendations. Session routes show an honest
+placeholder until Phase 2. Dashboard progress and rankings remain browser-local
+demo state; Profile and Learning Paths remain placeholders until their planned
+delivery. Explicit live mode retains the existing real login, email forms,
+catalog, and lab controls through server-only adapters. Neither mode establishes
+hosted acceptance, runtime isolation, or production launch readiness.
+
+**The contract diff was approved on 2026-10-23. Phase 1 is implemented;
+later phases remain pending approval.**
+The approved specification is in the backend's [API contract](../cyber-range-backend/docs/API.md).
+It supersedes the older frontend-only assumptions about Better Auth, database
+ownership, lifecycle states, quotas, routing, flag storage, and missing backend
+implementation. `PLAN.md` retains historical delivery evidence, not a second API
+contract.
+
+## Preview and live boundaries
+
+The server selects `FRONTEND_MODE=preview|live`, defaulting to `preview`.
+Only an explicit valid `live` setting enables backend access; invalid
+configuration fails closed. No browser-controlled value can switch modes.
 
 ```text
-Browser -> Next.js portal -> Backend HTTP API -> Database / lifecycle queue
-                               Privileged worker -> mTLS -> Disposable lab nodes
+Preview: Browser -> frontend fixtures / validated local store -> simulated UI
+
+Live:    Browser -> Next.js BFF -> Backend API -> PostgreSQL / lifecycle intent
+                                      Worker -> Redis / mTLS -> isolated lab host
 ```
 
-Pages render typed sample content from `src/features/catalog/data.ts`. Search, filters,
-sorting, and layout run in the catalog client component. Saved slugs use
-`cyber-range:saved-labs:v1` in local storage; preferences never establish user
-identity. Route shells and briefings use Server Components; interaction and
-browser storage components opt into the client boundary.
+In preview mode, catalog pages, briefings, recommendations, saved labs,
+navigation, and sign-in use the existing 12 editorial samples and local demo
+identity. `/login` and `/signup` share username-only entry; verification and
+password-reset pages explain the simulated account boundary and collect no
+credentials for processing. Session routes currently explain the pending
+controls without a target URL or flag. Phase 2 will simulate lifecycle states
+and add "Finish demo" completion with once-only demo points.
 
-`GET /api/backend-status` calls the server-only adapter in `src/features/backend/adapter.ts`.
-It requests the fixed `/healthz` path at `BACKEND_URL`, validates the response
-with Zod, rejects redirects, and times out after three seconds. It returns only
-`{ status: "not-configured" | "reachable" | "unavailable" }`, with no cache.
-The URL is deployment configuration, never browser input. Production remote
-connections require HTTPS. This checks API liveness, not database, queue,
-session, or target readiness.
+All backend-facing frontend `/api` handlers return HTTP 404 `NOT_FOUND` before
+credential access, cookie resolution, or upstream requests. This includes the
+catalog and maintainer backend-status check as well as auth, email, lifecycle,
+and submission endpoints. Server-rendered pages must also avoid backend reads.
+`/instances` returns 404 even if `LIVE_INSTANCE_UI` is set. Existing backend
+configuration or a live-session cookie cannot authorize a preview action.
 
-The field guide checks on demand. The frontend still shows preview content
-even if the API is reachable. The backend's `/v1/challenges` is a scaffold;
-production catalog compatibility is not claimed.
+Explicit live mode retains the current integrated behavior and its separate
+test configuration. `/instances` additionally requires `LIVE_INSTANCE_UI`.
+API errors never cause a live screen to silently substitute fictional data.
 
-### Browser-only demo state
+## Local demo state and interface design
 
-The CiscoKU Lab mockup is a separate presentation flow:
-`Browser → validated local state → simulated session/progress UI`.
-No demo action calls the lifecycle API. Username entry is not authentication.
+Preserve the current green-accented visual system, local Geist fonts, shared
+primitives, light/dark/system themes, keyboard navigation, and reduced-motion
+support. Keep route files thin and components/styles beside their features.
 
-`src/features/learner` owns a Zod-validated, versioned local store under
-`ciscoku:learner:v1`. It records a demo username, sign-in state, unique lab
-completion timestamps, and per-lab session timestamps. XP, levels, badges, and
-topic progress are derived; stored totals are not trusted. Timers use absolute
-expiry times. Expired sessions cannot be completed, and replaying a completed
-lab cannot award more XP. Multiple entries may have their own simulated session.
+Preview state is versioned and Zod-validated. The existing learner store uses
+`ciscoku:learner:v1`; implementation will migrate valid usernames and known
+completions while discarding legacy active simulations. Preserve bookmarks
+under `cyber-range:saved-labs:v1` and theme preference under `ciscoku:theme`.
+Phase 2 mock sessions will permit one active instance, use absolute expiry
+timestamps, start with 60 minutes, and extend by 30 minutes up to two hours after
+creation. Refresh must not restart the timer; expired sessions cannot be completed.
 
-Components subscribe to storage changes. Invalid stored data resets to an empty
-demo state. If writes fail, changes remain usable in memory for the current tab
-and the interface warns that refresh can lose progress. Sign out preserves
-progress; choosing a different username replaces it. The guide exposes a
-confirmed reset. None of these values grants access to backend resources.
+Preview sign-out clears active simulations but retains progress. Explicit reset
+clears learner progress. A different username starts fresh. Invalid storage
+recovers safely; blocked writes leave the tab usable with a visible warning.
+Phase 3 will connect demo totals, rewards, dashboard, fictional leaderboard, and
+read-only Profile to the same unique completion records. Learning Paths remains
+a labeled preview. No local value grants backend authority.
 
-The leaderboard combines fictional fixtures with the local demo learner.
-Learning Paths and Profile are preview destinations. Sample briefings contain
-metadata only; real learning content and challenge internals remain deferred.
+Fixtures use generated public contract types and matching runtime validation;
+editorial fields and demo provenance stay separate from backend DTOs. Do not
+invent production API fields or display fixture provenance as a database read.
+There are no real learning tasks, vulnerable applications, flags, or solve
+instructions in this preview.
 
-Theme tokens in `src/styles/tokens.css` follow the system preference by default.
-A local `ciscoku:theme` override is applied before paint. Route entry points
-stay in `src/app`; feature components and styles stay under `src/features`.
+## Live authentication and API contract
 
-### Connecting the next features
+Backend accounts use Argon2id passwords, hashed opaque sessions, player/admin
+roles, email verification, and single-use reset/verification tokens. Better Auth
+and frontend-owned database access are not the implemented architecture.
 
-1. Agree a versioned catalog schema: public challenge ID, slug, title, category,
-   difficulty, description, objectives, prerequisites, tags, duration, points,
-   and actual availability. Validate on the server and handle unavailable data
-   explicitly. Never expose image references, internal IPs, or flag material.
-2. Implement server-verified sessions before protected actions. Better Auth is
-   planned; its storage integration is part of that implementation.
-3. After session and email verification, the Next.js server may mint a short-lived,
-   scoped service token with identity in `sub`. Keep the signing secret outside
-   browser bundles. The backend verifies identity, scope, ownership, and quotas.
-4. Send lifecycle and submission commands through server handlers/actions.
-   Browser-supplied user IDs are not authority. Real launching stays disabled until
-   the full authorized path exists; the current Start Lab action is UI simulation.
-5. Publish contracts as a versioned artifact or generated types. Sibling source
-   imports must not be required to build either repository.
+The BFF exchanges credentials/session tokens using a dedicated backend
+bootstrap credential. It stores the opaque session in an encrypted HttpOnly
+cookie and resolves it server-side before signing a short-lived scoped service
+token with `sub` and `sid`. The backend rechecks session ownership/liveness,
+account status, role permissions, and resource ownership. Browser requests
+never select the acting user. Mutations enforce origin checks; BFF responses
+are no-store. Public signup remains closed.
 
-No credentials are needed for the UI preview. The frontend holds no Docker
-credentials and makes no Docker calls.
+The backend generates OpenAPI from its Fastify/Zod route schemas at
+`GET /v1/openapi.json`. Frontend types are committed under
+`src/features/backend/generated/openapi.ts`; independent handwritten wire
+schemas or sibling source imports are not the source of truth. The 2026-10-23
+review confirmed those generated types match the local backend's 20-path
+contract. Any additional contract change requires user approval.
 
-## Topology
+Phase 1 backend changes enforce verified email at creation and reject nonempty
+extend/delete bodies. Node capacity admission and orphan inventory cleanup
+remain pending in Phases 2 and 3. API details and errors are specified in the
+backend API contract.
 
-Three trust zones. The boundary between them is the whole design.
+## Backend lifecycle and target trust zones
 
-```
-                    ┌─────────────────────────────────────┐
-   Users ──────────▶│  ZONE 1  CONTROL PLANE (trusted)    │
-                    │                                     │
-                    │  Next.js on Vercel                  │
-                    │  Neon Postgres                      │
-                    │  Orchestrator + Redis on a VPS      │
-                    └──────────────┬──────────────────────┘
-                                   │ Docker Engine API over mTLS
-                                   │ outbound only, control plane dials out
-                    ┌──────────────▼──────────────────────┐
-                    │  ZONE 2  LAB NODES (semi-trusted)   │
-                    │                                     │
-                    │  Docker daemon, Traefik ingress     │
-                    └──────────────┬──────────────────────┘
-                                   │
-                    ┌──────────────▼──────────────────────┐
-   Users ──────────▶│  ZONE 3  INSTANCES (hostile)        │
-   attack traffic   │                                     │
-   via Traefik      │  One container per user per         │
-   or VPN           │  challenge, own network, no egress  │
-                    └─────────────────────────────────────┘
+```text
+Trusted control plane: Next.js BFF, backend API/worker, PostgreSQL, Redis
+                           |
+                     Docker Engine mTLS
+                           v
+Separate disposable lab host: Docker Engine and isolated Traefik ingress
+                           |
+                           v
+Hostile targets: one restricted container and isolated network per instance
 ```
 
-A user who achieves full root inside Zone 3 has reached a disposable container
-on a disposable host with no credentials, no private-network reachability, and
-no path to Zone 1. That outcome is the design target, and `SECURITY.md`
-enumerates the controls that produce it.
+Only the backend worker holds Docker Engine credentials. Frontend servers and
+targets receive no Docker, database, Redis, or target-host management secrets.
+Control-plane services never share a host with hostile targets in the required
+deployment topology. Disposable fixture success does not establish production
+firewall or trust-zone enforcement.
 
-The control plane dials out to lab nodes. Lab nodes never initiate connections
-to the control plane, which means a compromised node cannot reach the database
-even if it recovers a credential.
+The implemented HTTP lifecycle uses `pending`, `provisioning`, `running`,
+`stopping`, `stopped`, `failed`, and `expired`. Create, extend, and destroy return
+202 with instance state, operation ID, and replay indicator. The API persists
+intent and idempotency records; the worker delivers operations through BullMQ.
+A database uniqueness constraint prevents more than one active instance per
+account. Current worker maintenance uses process intervals to create persisted
+expiry/reconciliation operations; it is not the previously described BullMQ 6
+Job Scheduler implementation. The dependency is BullMQ 5.
 
-## Why the orchestrator exists
+The single worker targets one registered lab node. It uses reviewed pinned
+runtime manifests, non-root execution, dropped capabilities, no-new-privileges,
+default seccomp/AppArmor, read-only roots, bounded resources, and isolated
+networks. It polls health before marking a target running. The owner-only URL
+is `LAB_PUBLIC_BASE_URL` plus `/labs/<unguessable-route-key>/`; current routing
+uses Traefik file-provider documents, not per-instance subdomain labels.
+Production route delivery uses the worker's authenticated Docker channel.
 
-Three constraints force a separate always-on service.
+Flags are HMAC-derived per user, challenge, and instance and injected only at
+runtime. Expected and submitted flag values are never persisted or logged.
+Scoring transactions award fixed challenge points once per user/challenge.
+Decaying scores, hints, global first-blood recognition, and flag-sharing review
+are future work. Real submissions require an owned running, unexpired instance.
 
-* Vercel cannot run Docker, and the web app is on Vercel.
-* Instance expiry needs a durable timer. Serverless functions do not hold one,
-  and a cron that fires every minute against a serverless endpoint is a worse
-  version of what BullMQ already does well.
-* The Docker Engine API is effectively root on the host. Exactly one service
-  should hold that capability, and it should be small enough to audit.
+The new capacity and orphan-reconciliation work must count outstanding resources
+until confirmed cleanup and avoid deleting unrelated resources or trusted
+ingress. It must fail closed on unavailable inventory/database evidence and
+serialize maintenance with lifecycle execution. Multiple workers and multi-node
+scheduling remain deferred.
 
-## Technology placement
+## Verification and launch limits
 
-The stack is split by trust and runtime responsibility:
+The current delivery targets local development and disposable isolated fixtures.
+Frontend preview tests must run without the backend, including with backend
+variables deliberately populated. Existing live integration tests explicitly
+select live mode. Backend database/Redis tests use disposable services; real
+runtime acceptance additionally requires the isolated worker/ingress fixture.
+Missing infrastructure blocks that acceptance milestone.
 
-| Component | Runs on | Technology | Access it holds |
-|---|---|---|---|
-| Web portal | Vercel | Next.js 16, Better Auth, Drizzle, Zod | User sessions and application data |
-| Database | Neon | PostgreSQL | Application records and audit data |
-| Orchestrator | Separate VPS | Fastify, BullMQ 6, Redis, Dockerode | Docker Engine API over mTLS |
-| Lab node | Dedicated disposable VPS | Docker, Traefik, host firewall | Vulnerable targets and public ingress |
-| Shared contracts | Versioned artifact across repos (planned) | Zod schemas / generated types | Request and response validation |
-
-The web portal can request lifecycle operations but cannot create containers.
-The orchestrator can create containers but receives only a signed service token
-with the authenticated user id. Lab nodes accept outbound control connections
-from the orchestrator and hold no database or web credentials.
-
-## Instance lifecycle
-
-The state machine is deliberately explicit, because every failure mode here
-either strands a user without a target or leaks a container that runs forever.
-
-```
-  queued ──▶ provisioning ──▶ running ──▶ destroying ──▶ destroyed
-     │             │             │             ▲
-     │             │             └─────────────┘
-     │             │              TTL expiry, user destroy,
-     │             │              or abuse kill
-     └─────────────┴──▶ failed ──────────────────┘
-```
-
-**Spawn.** The web app verifies the session and sends an authorized command to
-the backend. The backend checks the concurrent instance quota, inserts an
-`instances` row in `queued`, and enqueues a job
-keyed on `user:challenge` so a double-click cannot produce two containers. A
-partial unique index on live states enforces the same rule at the database
-level, because the idempotency key alone is not a guarantee.
-
-**Provision.** A worker claims the job, picks a healthy node with free
-capacity, creates a dedicated Docker network for the instance, derives the
-user's flag, and starts the pinned image digest with resource limits, dropped
-capabilities, and Traefik routing labels. The flag is injected at runtime as an
-environment variable or a mounted file. It is never baked into the image,
-because images are cached, shared, and pullable.
-
-**Health.** The worker polls the health check the challenge manifest declares,
-up to a timeout. Only when the check passes does the instance become `running`
-with `expires_at` set to one hour out. Marking it running on container start
-instead would hand users a URL that returns connection-refused for the first
-ten seconds, which reads as a broken platform.
-
-**Serve.** The web UI polls instance state, then shows the target URL and a
-countdown. The user may extend by thirty minutes up to three times, capping a
-session at two and a half hours, and may destroy early.
-
-**Reap.** A BullMQ 6 Job Scheduler runs every thirty seconds, sweeps expired
-instances, and destroys the container, network, and route.
-
-**Reconcile.** A slower loop, once a minute, compares intent against reality in
-both directions. A labelled container with no live database row is an orphan
-and gets killed. A database row marked running whose container has vanished is
-marked failed. Without this loop, every orchestrator crash leaks compute
-permanently.
-
-## The flag model
-
-Static flags are a scoring bug waiting to happen, because the first solver can
-paste the answer into a group chat and the leaderboard stops meaning anything.
-
-Per-user dynamic flags fix it. The flag is
-`HMAC-SHA256(server_secret, user_id || challenge_id)`, truncated and wrapped as
-`RANGE{...}`. Three properties follow:
-
-* Nothing per-user is stored. Verification recomputes the expected value.
-* A leaked flag does not work for the person who receives it.
-* A submitted flag that does not match the submitter but does match another
-  user identifies both parties, which turns flag sharing from undetectable into
-  self-reporting.
-
-Detection should raise a review item rather than auto-ban. Shared accounts,
-classroom use, and coincidence all exist.
-
-## Exposure modes
-
-The challenge manifest declares one of three, and the mode determines how a
-user reaches the target.
-
-**http** — Traefik routes `https://<random-id>.lab.example.com` to the
-container, under a wildcard certificate issued by DNS-01. The random subdomain
-is unguessable, so instances are not enumerable. This covers the majority of
-web challenges and needs no client setup at all, which matters more than it
-sounds like for beginner retention.
-
-**tcp** — The orchestrator allocates a port from a reserved range and publishes
-`lab.example.com:PORT`. This covers binary exploitation and anything spoken
-over a raw socket.
-
-**vpn** — The instance receives an address on the user's WireGuard subnet and
-is reachable only through their tunnel. This is the mode for full-machine
-challenges with SSH, SMB, or a Windows target, and it arrives in Phase 6
-because the setup friction is real and should not block launch.
-
-## Web to orchestrator contract
-
-The web app calls the orchestrator over HTTPS with a short-lived signed service
-token. The critical rule is that the token carries the authenticated user id as
-a signed claim, and the orchestrator reads the user id from the token only.
-Accepting a user id from the request body would let anyone with a token spawn
-as anyone, which is a straight authorization bypass.
-
-Endpoints are narrow on purpose:
-
-```
-POST   /v1/instances          { challengeId }   -> { instanceId, state }
-GET    /v1/instances/:id                        -> full instance state
-POST   /v1/instances/:id/extend                 -> { expiresAt }
-DELETE /v1/instances/:id                        -> { state }
-GET    /v1/nodes/health                         -> operator only
-```
-
-Request and response shapes must be versioned across the two repositories.
-Generated types and runtime validation should catch incompatible changes
-before production. This contract work is still planned.
-
-## Scoring
-
-Decaying scores keep a challenge meaningful over time. Value starts at
-`base_points`, decreases as solves accumulate, and stops at a floor around
-thirty percent of base. First blood earns recognition on the challenge page.
-Hint purchases subtract from the award at solve time, not immediately, so a
-user who buys a hint and never solves loses nothing.
-
-Recomputing the leaderboard on every solve is fine early and becomes a problem
-around the point where solves outpace a few per second. The fix at that stage
-is a materialized view refreshed on a schedule, not a rewrite.
-
-## What runs where, at a glance
-
-| Concern | Lives in | Why |
-|---|---|---|
-| Auth, catalog, scoring UI | Next.js on Vercel | Stateless, edge-cached, no privileged access |
-| Domain schema and migrations | Backend repository | Owned by the API and orchestrator |
-| Container lifecycle | Orchestrator VPS | Needs Docker API and durable timers |
-| Vulnerable targets | Lab nodes | Disposable, isolated, rebuildable |
-| Ingress and TLS | Traefik on lab nodes | Configured by labels the orchestrator sets |
+After each numbered phase, the lead reports changes, test instructions/results,
+and open questions, updates the canonical documents, and pauses for approval.
+Production email, hosting, policies, backup/rotation/incident exercises, and
+host-level egress anomaly monitoring remain open launch gates. `SECURITY.md`
+continues to govern target isolation; preview success never authorizes signup
+or a public deployment.

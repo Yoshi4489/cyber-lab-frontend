@@ -1,5 +1,65 @@
 # Development Plan: CiscoKU Lab
 
+## Mock preview and lifecycle hardening delivery (October 23, 2026)
+
+The user approved a new delivery direction: make the entire learner preview
+mock-only, including username-only sign-in and simulated sessions completed by
+a "Finish demo" button. Keep the current visual design and dependencies.
+Retain explicit live mode for separate integration tests; default preview must
+never call the backend, even when backend configuration is present.
+
+**Checkpoint: contract approved on October 23; Phase 1 complete, awaiting Phase 2 approval.**
+The approved boundary and backend semantics are in
+`../cyber-range-backend/docs/API.md` and the reconciled `ARCHITECTURE.md`.
+Exactly two implementation agents are authorized: frontend-only changes in this
+repository and backend-only changes in the sibling. Neither agent may change
+the contract independently. Report changes, tests and open questions after each
+phase, update existing documentation, and pause before starting the next phase.
+
+| Phase | Frontend | Backend |
+|---|---|---|
+| 1 | Server-only preview/live boundary; local username navigation and sample catalog/briefings | Verified-email spawn enforcement and empty-body command validation |
+| 2 | Simulated lifecycle, absolute countdown, extension, completion and replay | Node capacity migration/configuration and retry-safe admission |
+| 3 | Consistent local progress, fictional rankings, read-only Profile and guide | Serialized inventory-to-database orphan cleanup with safe retries/audit |
+| 4 | Separate preview/live test configurations and responsive/accessibility checks | Disposable-service and isolated-worker acceptance, including isolation probes |
+
+Phase 1 verification: frontend lint, typecheck, 86 unit tests, production build,
+BFF smoke, and all 99 browser checks passed (21 preview and 78 explicit-live,
+across desktop, mobile, and tablet). The final browser run also confirmed the
+username field waits for local-state readiness, preventing lost early input.
+The operator route has a request-level gate because a page-level not-found can
+otherwise stream HTTP 200. An independent built-preview check visited 15 pages,
+exercised all 14 backend-facing API methods with an old valid sealed cookie,
+and observed zero upstream, browser API, external requests, or page errors.
+The operator returned 404 even with `LIVE_INSTANCE_UI=true`. Generated types
+exactly match the backend's current 20-path contract.
+
+Backend lint/typecheck/build passed; a fresh disposable PostgreSQL 18 suite
+passed 160 tests with six environment skips (five Redis queue cases and one
+OpenSSL-dependent TLS case). The final focused security/ownership rerun passed
+all 19 tests. Both temporary clusters were removed; the demo database was not
+migrated or modified. No real target, email, or hosted service was created.
+Backend implementation is recorded in local commit `9855839`; no push was made.
+
+Phase 2 has not started. Preview session pages deliberately explain the pending
+controls without timers, targets, or completion awards. Capacity admission and
+schema changes remain pending. Next approval authorizes those two workstreams
+only, followed by another phase report and pause.
+
+Scope is local development and disposable fixtures. Real CTF content, admin
+tools, advanced access/scaling, hosting work, and host-level egress anomaly
+monitoring are deferred. Public signup stays closed; deferred monitoring and
+production security/operational requirements remain launch blockers. Missing
+isolated infrastructure blocks its acceptance checks rather than being replaced
+by mock evidence.
+
+The live API integration and older UX/platform sections below are historical
+checkpoints. Their phase numbers describe earlier roadmaps, not the four phases
+in this delivery. Their implementation evidence remains useful; instructions to
+continue live learner integration are superseded by this preview direction.
+The default experience is now isolated preview; explicit live mode retains the
+earlier integrated behavior and honestly labeled unfinished demo screens.
+
 ## Approved live API integration (October 2026)
 
 This integration supersedes the demo-only delivery boundary below. The backend
