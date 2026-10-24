@@ -10,14 +10,14 @@ presentation and the server-only browser-facing backend-for-frontend (BFF).
 Phase 1 on 2026-10-23 makes the default learner experience an isolated preview:
 username-only entry, local identity and navigation, 12 editorial samples,
 briefings, bookmarks, and sample recommendations. Phase 2 adds simulated session
-controls and once-only demo completion. Dashboard progress and rankings remain browser-local
-demo state; Profile and Learning Paths remain placeholders until their planned
-delivery. Explicit live mode retains the existing real login, email forms,
+controls and once-only demo completion. Phase 3 connects dashboard progress,
+fictional rankings and read-only preview Profile to shared browser-local progress.
+Learning Paths remains a placeholder. Explicit live mode retains the existing real login, email forms,
 catalog, and lab controls through server-only adapters. Neither mode establishes
 hosted acceptance, runtime isolation, or production launch readiness.
 
-**The contract diff was approved on 2026-10-23. Phases 1 and 2 are implemented;
-later phases remain pending approval.**
+**The contract diff was approved on 2026-10-23. Phases 1 through 3 are implemented;
+Phase 4 remains pending approval.**
 The approved specification is in the backend's [API contract](../cyber-range-backend/docs/API.md).
 It supersedes the older frontend-only assumptions about Better Auth, database
 ownership, lifecycle states, quotas, routing, flag storage, and missing backend
@@ -80,9 +80,14 @@ cancel stale actions even when the same username is reused.
 Preview sign-out clears active simulations but retains progress. Explicit reset
 clears learner progress. A different username starts fresh. Invalid storage
 recovers safely; blocked writes leave the tab usable with a visible warning.
-Phase 3 will connect demo totals, rewards, dashboard, fictional leaderboard, and
-read-only Profile to the same unique completion records. Learning Paths remains
-a labeled preview. No local value grants backend authority.
+Phase 3 connects demo totals, rewards, dashboard, fictional leaderboard, and
+read-only Profile to one progress selector over validated known completions.
+Completed-lab lists, topic counts, levels, daily activity and existing illustrative
+milestones share those records. Recommendations prefer unfinished samples;
+replay earns no extra XP. Fictional rows remain distinct when usernames match,
+and equal XP shares a displayed rank. Profile adds no account settings or backend
+requests; its explicit-live route retains the existing honest placeholder.
+Learning Paths remains a labeled preview. No local value grants backend authority.
 
 Fixtures use generated public contract types and matching runtime validation;
 editorial fields and demo provenance stay separate from backend DTOs. Do not
@@ -162,8 +167,12 @@ Phase 2 capacity admission counts reservations and outstanding resources until
 confirmed cleanup under a per-node database lock. Explicit worker capacity is
 required; excess spawns fail asynchronously with `node_capacity_exhausted`.
 Read-only inventory fails closed on missing or ambiguous ownership evidence.
-Phase 3 orphan cleanup must preserve unrelated resources and trusted ingress,
-abort on unavailable evidence, and serialize maintenance with lifecycle execution.
+Phase 3 orphan cleanup validates complete database/inventory evidence and every
+candidate before recording audit starts and deleting missing/terminal resources.
+It preserves active instances, unrelated resources and trusted ingress; aborts on
+unavailable evidence; retries partial failures; and confirms absence and unchanged
+terminal intent before releasing reservations. One execution gate serializes
+sweeps with lifecycle execution and drains during shutdown, including startup.
 Multiple workers and multi-node
 scheduling remain deferred.
 

@@ -17,8 +17,11 @@ and instance controls. Preview returns 404 for all backend-facing API handlers
 before cookies, credentials, or upstream requests. Demo sessions use generated
 DTOs, one active session, a saved 60-minute expiry, 30-minute extensions and a
 two-hour cap. Version 1 learner state migrates identity/completions while dropping
-old sessions. Consistent progress/Profile and backend orphan cleanup remain later
-phases; backend capacity is tracked separately in the sibling repository.
+old sessions. Dashboard, read-only preview Profile and fictional rankings share
+one validated local progress selector, completed-lab lists and illustrative
+milestones. Recommendations prefer unfinished samples; Learning Paths remains
+a preview. Live profile/progress integration remains pending. Backend lifecycle
+and cleanup acceptance are tracked separately in the sibling repository.
 Read the current delivery checkpoint in `PLAN.md` before future phases.
 
 This is the **frontend repository**. The independent backend is in the sibling
@@ -74,8 +77,8 @@ Auth, React Hook Form with Zod, Vitest and Playwright.
 
 The frontend currently uses Next.js, React, TypeScript, Tailwind, local Geist
 fonts, shadcn-style source components with Radix primitives, and Playwright.
-Backend authentication is integrated through the frontend BFF; scoring and
-progress UI integration are still planned. Fastify, BullMQ on Redis,
+Backend authentication is integrated through the frontend BFF; real scoring,
+profile and progress UI integration are still planned. Fastify, BullMQ on Redis,
 Dockerode, and Traefik belong to the separate backend and lab infrastructure.
 
 Keep route files thin. Place components, state, and CSS modules with their feature.

@@ -8,7 +8,7 @@ a "Finish demo" button. Keep the current visual design and dependencies.
 Retain explicit live mode for separate integration tests; default preview must
 never call the backend, even when backend configuration is present.
 
-**Checkpoint: contract approved on October 23; Phases 1 and 2 complete, awaiting Phase 3 approval.**
+**Checkpoint: contract approved on October 23; Phases 1 through 3 complete, awaiting Phase 4 approval.**
 The approved boundary and backend semantics are in
 `../cyber-range-backend/docs/API.md` and the reconciled `ARCHITECTURE.md`.
 Exactly two implementation agents are authorized: frontend-only changes in this
@@ -65,9 +65,40 @@ real isolated Docker/Redis acceptance remains open for Phase 4. The disposable
 PostgreSQL cluster was stopped and removed without touching the demo database.
 Generated frontend types exactly match all 20 current backend paths.
 
-Phase 3 has not started. Next approval covers consistent mock progress,
-fictional rankings, read-only Profile and guide, plus safe serialized backend
-orphan cleanup. No hosted configuration or deployment was changed in Phase 2.
+Phase 3 was approved on October 24 and is complete. Dashboard, read-only preview
+Profile and fictional rankings use the same validated local progress selector.
+Completed labs, totals, topic counts and existing illustrative rewards agree;
+recommendations prefer unfinished samples. Completion and guide links connect
+the screens. Learning Paths remains a preview; the explicit-live Profile keeps
+its honest placeholder. No API or storage-schema change was needed.
+
+Phase 3 frontend verification: lint/typecheck/build, BFF smoke, 111 unit tests and
+all 135 browser checks passed (57 preview, 78 explicit-live). Cases cover actual
+completion/replay across views, sign-out/reentry, reset with bookmarks/theme
+preserved, malformed completion data, duplicate fictional usernames and temporary
+same-tab progress when storage writes fail. One combined visual pass covered
+Profile/dashboard/rankings in desktop/tablet/mobile and light/dark, including
+long names, keyboard skip focus and reduced motion. All 18 captures are retained
+under the task visualization folder's `phase3-progress-qa`; no fixes or second
+visual pass were required.
+
+Backend cleanup is recorded in `d9823fe`: complete database/inventory validation,
+all candidate checks and audit starts precede deletion; active instances,
+unrelated resources and trusted ingress survive; partial failures retry without
+premature capacity release. Sweeps and lifecycle execution share one gate, with
+shutdown drain during startup and later maintenance. Final lint/typecheck/build
+and whitespace passed; an exact-source disposable PostgreSQL/TLS run passed 215
+tests with five Redis cases skipped. A transient readiness timeout under load
+was resolved by focused reruns and two-worker execution without relaxed timeouts.
+Generated frontend types exactly match all 20 backend paths. The fresh database
+cluster was stopped and removed. Docker Engine was unreachable; Engine/router
+fixtures do not substitute for real isolation evidence.
+
+Phase 4 has not started and requires approval. It covers final browser and
+disposable-service acceptance, including real isolated-worker expiry, recovery,
+capacity, orphan cleanup and isolation probes. Redis execution and isolated-host
+availability remain open. No hosted configuration, real target, dependency or
+public-signup setting changed in Phase 3; local commits were not pushed.
 
 After these four delivery phases, plan a separate live CTF milestone: author a
 reviewed beginner web challenge and solve check; connect real learner sessions,
@@ -77,7 +108,7 @@ cleanup through the hosted frontend. The intended endpoints supplied by the user
 are https://cyber-lab-frontend.vercel.app and
 https://cyber-range-api.onrender.com. Their existence alone does not prove worker
 reachability or playable targets. This milestone is not implemented or approved
-for deployment by the mock-first Phase 2 approval.
+for deployment by the current mock-first delivery approvals.
 
 Scope is local development and disposable fixtures. Real CTF content, admin
 tools, advanced access/scaling, hosting work, and host-level egress anomaly

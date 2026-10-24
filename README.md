@@ -23,10 +23,13 @@ Phase 2 adds simulated start, preparation, running, extension, stop, expiry,
 completion and replay. A demo starts with 60 minutes; extensions add 30 minutes
 up to two hours from the original start. Refresh preserves that absolute expiry.
 Finish demo records one illustrative reward per lab; replay awards zero extra XP.
-Consistent progress/Profile follow in Phase 3.
-Existing saved progress and fictional rankings remain illustrative. Learning
-Paths and Profile remain previews. Demo identity never authorizes a backend
-operation or records a real solve.
+Phase 3 connects the dashboard, read-only demo Profile, and fictional rankings
+to one validated local progress view. Completed sample labs, totals, topic
+counts, daily goals and the existing illustrative milestones agree across
+screens. Recommendations prefer unfinished samples. Equal XP shares a rank;
+fictional learners remain separate even when a demo username matches theirs.
+Learning Paths remains an honest preview. Demo identity never authorizes a
+backend operation or records a real solve.
 
 Live submissions/progress UI and database rankings remain unfinished. The
 loopback fixture verifies frontend behavior; it does not establish runtime
@@ -75,7 +78,9 @@ The generator fetches `GET /v1/openapi.json`, validates the configured API
 origin, and writes `src/features/backend/generated/openapi.ts`. It does not
 write or maintain a copied OpenAPI document. Generated types and shared
 runtime validators support the integrated catalog, authentication, and lifecycle
-flows; progress and leaderboard UI conversion remains pending.
+flows. Preview progress is a separate UI view derived from validated local
+completions and editorial samples; live profile and leaderboard integration
+remains pending.
 
 The **Backend contract freshness** GitHub Actions workflow provides the
 equivalent read-only check from CI. Run it with a routable HTTPS backend API
@@ -167,9 +172,11 @@ known completions into version 2, discarding all legacy active simulations.
 Sign out clears active simulations and retry records while retaining progress;
 a different username starts fresh. The explicit reset also clears progress.
 Bookmarks and theme preferences remain untouched by all three actions.
-XP and levels still displayed in the demo dashboard are derived from sample catalog
-fixtures and unique local completions, not from backend solves. These
-are illustrative reward rules, not production scoring policy. The same username
+Dashboard, Profile, and the current row in the fictional rankings share one
+progress selector. It counts only known samples with valid completion dates;
+Profile lists every completion, while the dashboard lists the most recent three.
+XP, levels, topic progress, daily goals and milestones are illustrative rules
+derived from those samples, not production scoring policy. The same username
 resumes local progress; entering a different username starts a fresh demo.
 Sign out does not clear progress. The **Demo guide** includes an explicit reset.
 If storage is blocked, the current tab remains usable with a warning; refreshing
@@ -182,8 +189,8 @@ can lose that temporary state. No demo value grants server access.
 | `src/app/` | Thin App Router entry points, metadata, HTTP status route |
 | `src/features/shell/`, `theme/` | Shared navigation, temporary identity, theme controls |
 | `src/features/catalog/`, `briefing/`, `bookmarks/` | Published catalog, preview metadata, backend briefings, saved labs |
-| `src/features/learner/` | Validated demo state and onboarding |
-| `src/features/dashboard/`, `session/`, `leaderboard/` | Demo progress, backend lifecycle, fictional rankings |
+| `src/features/learner/` | Validated demo state, shared progress views, and onboarding |
+| `src/features/dashboard/`, `profile/`, `session/`, `leaderboard/` | Local progress, read-only demo Profile, lifecycle views, fictional rankings |
 | `src/features/landing/`, `preview/`, `guide/` | Guest entry, future-page previews, demo help |
 | `src/features/backend/` | Server-only backend adapters, BFF authorization, and maintainer status UI |
 | `src/components/ui/`, `src/styles/` | Small shared primitives, theme tokens, loading states |
