@@ -7,12 +7,18 @@ import { toLiveLab } from "./live";
 import { LabCard } from "./lab-card";
 import { useAuth } from "@/features/auth/provider";
 import { previewLabs } from "./preview";
+import { useLearner } from "@/features/learner/store";
 
 export function CatalogRecommendations() {
   const { mode } = useAuth();
   return mode === "preview"
-    ? previewLabs.slice(0, 3).map(lab => <LabCard key={lab.slug} lab={lab} />)
+    ? <PreviewRecommendations />
     : <LiveRecommendations />;
+}
+function PreviewRecommendations() {
+  const { learner } = useLearner();
+  const remaining = learner.signedIn ? previewLabs.filter(lab => learner.completions[lab.slug] === undefined) : previewLabs;
+  return (remaining.length ? remaining : previewLabs).slice(0, 3).map(lab => <LabCard key={lab.slug} lab={lab} />);
 }
 function LiveRecommendations() {
   const resource = useResource(readCatalog);

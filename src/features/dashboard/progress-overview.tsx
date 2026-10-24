@@ -1,9 +1,6 @@
 import { Award, CheckCircle2, Flame, Zap } from "lucide-react";
 import {
-  activity,
-  badgesFor,
-  levelFor,
-  totalXp,
+  progressFor,
   XP_PER_LEVEL,
   type Learner,
 } from "@/features/learner/model";
@@ -16,21 +13,19 @@ export function ProgressOverview({
   learner: Learner;
   now: number;
 }) {
-  const xp = totalXp(learner);
-  const badges = badgesFor(learner);
-  const { streak } = activity(learner, now);
+  const { xp, level, streak, completedCount, totalLabs, earnedBadges } = progressFor(learner, now);
   const metrics = [
     {
       label: "Demo XP earned",
       value: xp,
       icon: Zap,
-      note: `Level ${levelFor(xp)} · keep exploring`,
+      note: `Level ${level} · keep exploring`,
     },
     {
       label: "Labs completed",
-      value: Object.keys(learner.completions).length,
+      value: completedCount,
       icon: CheckCircle2,
-      note: "Out of 12 sample labs",
+      note: `Out of ${totalLabs} sample labs`,
     },
     {
       label: "Learning streak",
@@ -40,7 +35,7 @@ export function ProgressOverview({
     },
     {
       label: "Badges unlocked",
-      value: badges.filter((b) => b.earned).length,
+      value: earnedBadges,
       icon: Award,
       note: "Celebrate your milestones",
     },
@@ -58,7 +53,7 @@ export function ProgressOverview({
         </div>
       ))}
       <div className={styles.level}>
-        <span>Level {levelFor(xp)}</span>
+        <span>Level {level}</span>
         <progress
           aria-label="Progress to next level"
           value={xp % XP_PER_LEVEL}

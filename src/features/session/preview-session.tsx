@@ -53,6 +53,7 @@ export function PreviewSession({ lab }: { lab: Lab }) {
           {learner.completions[lab.slug] !== undefined && <p className={styles.replay}><RotateCcw size={16} />You have already earned this lab’s demo XP. Replays add no extra XP.</p>}
           <Button className="full-width" disabled={busy} onClick={() => void mutate("create")}>{learner.completions[lab.slug] !== undefined ? "Replay demo" : "Start demo"}</Button>
         </>}
+        {completed && !active && <p><Link href="/dashboard">View your dashboard →</Link></p>}
         <p><Link href="/labs">Explore the sample labs →</Link></p>
       </>}
       <div className={styles.notice}><DemoNotice /></div>

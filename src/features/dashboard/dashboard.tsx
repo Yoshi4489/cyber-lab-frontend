@@ -2,7 +2,6 @@
 import Link from "next/link";
 import {
   ArrowRight,
-  Award,
   Check,
   FlaskConical,
   Sparkles,
@@ -10,7 +9,9 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CatalogRecommendations } from "@/features/catalog/recommendations";
-import { activity, badgesFor } from "@/features/learner/model";
+import { progressFor } from "@/features/learner/model";
+import { CompletedLabs } from "@/features/learner/completed-labs";
+import { Milestones } from "@/features/learner/milestones";
 import { DemoNotice } from "@/features/learner/demo-notice";
 import { useLearner } from "@/features/learner/store";
 import { useClock } from "@/hooks/use-clock";
@@ -39,7 +40,8 @@ export function Dashboard() {
         <Link href="/labs">{mode === "preview" ? "Or browse the sample labs →" : "Or browse the published labs →"}</Link>
       </section>
     );
-  const { today } = activity(learner, now);
+  const progress = progressFor(learner, now);
+  const { today } = progress;
   return (
     <div className={styles.dashboard}>
       <header className={styles.heading}>
@@ -71,7 +73,8 @@ export function Dashboard() {
             </div>
             <LearningArt />
           </section>
-          <SkillProgress learner={learner} />
+          <SkillProgress learner={learner} now={now} />
+          <CompletedLabs completed={progress.completedLabs} limit={3} />
           <section className={styles.explore}>
             <div className={styles.sectionHeading}>
               <div>
@@ -105,30 +108,7 @@ export function Dashboard() {
               </strong>
             </div>
           </section>
-          <section className={styles.panel}>
-            <div className={styles.sectionHeading}>
-              <h2>Your milestones</h2>
-              <Award size={19} />
-            </div>
-            <p>A few reasons to feel proud.</p>
-            <div className={styles.badges}>
-              {badgesFor(learner).map((b) => (
-                <div
-                  key={b.name}
-                  className={b.earned ? styles.earned : styles.locked}
-                >
-                  <span>
-                    <Award size={22} />
-                  </span>
-                  <div>
-                    <strong>{b.name}</strong>
-                    <small>{b.description}</small>
-                    <small>{b.earned ? "Unlocked" : "Not yet unlocked"}</small>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
+          <Milestones badges={progress.badges} />
           <div className={styles.demoNote}>
             <DemoNotice />
           </div>

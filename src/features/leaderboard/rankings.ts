@@ -1,4 +1,4 @@
-import { levelFor, totalXp, type Learner } from "@/features/learner/model";
+import { levelFor, progressFor, type Learner } from "@/features/learner/model";
 
 type Entry = {
   id: string;
@@ -21,11 +21,12 @@ const samples: Entry[] = [
 export function rankings(learner: Learner) {
   const entries = [...samples];
   if (learner.signedIn && learner.username) {
+    const progress = progressFor(learner, 0);
     entries.push({
       id: "current-demo",
       name: learner.username,
-      xp: totalXp(learner),
-      completed: Object.keys(learner.completions).length,
+      xp: progress.xp,
+      completed: progress.completedCount,
       current: true,
     });
   }

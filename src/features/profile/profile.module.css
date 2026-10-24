@@ -1,0 +1,123 @@
+.page {
+  display: grid;
+  gap: 28px;
+}
+.heading,
+.identity {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.heading {
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+.identity {
+  min-width: 0;
+}
+.identity > div {
+  min-width: 0;
+}
+.heading h1 {
+  font-size: clamp(30px, 3vw, 40px);
+  letter-spacing: -0.03em;
+  overflow-wrap: anywhere;
+  line-height: 1.2;
+  margin: 0 0 8px;
+}
+.heading p {
+  color: var(--muted-foreground);
+  font-size: 13px;
+  line-height: 1.7;
+}
+.avatar {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  flex-shrink: 0;
+  border-radius: 20px;
+  background: var(--soft-green);
+  color: var(--primary);
+  font-size: 22px;
+}
+.notice {
+  padding: 16px 18px;
+  background: var(--muted);
+  color: var(--muted-foreground);
+  border-radius: 10px;
+  font-size: 12px;
+  line-height: 1.8;
+}
+.columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  gap: 24px;
+}
+.main,
+.rail {
+  display: grid;
+  align-content: start;
+  gap: 24px;
+  min-width: 0;
+}
+.local {
+  padding: 23px;
+  border-radius: 16px;
+  background: var(--card);
+  border: 1px solid var(--border);
+}
+.local h2 {
+  font-size: 17px;
+  letter-spacing: -0.02em;
+}
+.local p {
+  color: var(--muted-foreground);
+  font-size: 12px;
+  line-height: 1.8;
+  margin: 12px 0;
+}
+.local a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  color: var(--primary);
+  font-size: 12px;
+}
+.guest {
+  display: grid;
+  justify-items: center;
+  gap: 24px;
+  padding: 80px 20px;
+  text-align: center;
+}
+.guest > svg {
+  color: var(--primary);
+}
+.guest h1 {
+  font-size: 32px;
+  letter-spacing: -0.03em;
+}
+.guest p {
+  max-width: 52ch;
+  color: var(--muted-foreground);
+  line-height: 1.8;
+}
+.guest > a:last-child {
+  color: var(--muted-foreground);
+  min-height: 44px;
+}
+@media (max-width: 1150px) {
+  .columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .rail {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 650px) {
+  .rail {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

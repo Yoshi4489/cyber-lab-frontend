@@ -46,7 +46,8 @@ export default function GuidePage() {
           <p>
             Finish demo simulates a successful solve and records illustrative XP
             once per sample lab. Replays award no extra XP. Progress stays in this
-            browser; leaderboard classmates are fictional.
+            browser. {preview ? "Dashboard and the read-only demo Profile show the same totals, completed labs, and illustrative milestones. " : "Dashboard progress remains a separate local demo. "}
+            Classmates in the rankings are fictional. Equal XP shares a rank.
           </p>
         </section>
         <section>

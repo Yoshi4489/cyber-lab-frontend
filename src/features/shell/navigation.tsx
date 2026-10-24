@@ -72,7 +72,7 @@ export function Navigation({ onNavigate }: { onNavigate?: () => void }) {
             >
               <Icon size={19} />
               <span>{label}</span>
-              {preview && <small>Preview</small>}
+              {preview && (href !== "/profile" || mode === "live") && <small>Preview</small>}
             </Link>
           );
         })}

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { getLab, labs } from "@/features/catalog/data";
+import { categories, getLab, labs } from "@/features/catalog/data";
 import { previewSessionSchema, previewCommandRecordSchema, isValidPreviewSession } from "@/features/session/preview-model";
 
 const username = z
@@ -116,3 +116,29 @@ export function badgesFor(learner: Learner) {
     },
   ];
 }
+
+export function completedLabsFor(learner: Learner) {
+  return labs.flatMap(lab => {
+    const completedAt = timestamp.safeParse(learner.completions[lab.slug]);
+    return completedAt.success ? [{ ...lab, completedAt: completedAt.data }] : [];
+  }).sort((a, b) => b.completedAt - a.completedAt || a.slug.localeCompare(b.slug));
+}
+
+// Every progress screen derives its display from the same known completions.
+// These are illustrative rewards, never a backend profile or scoring record.
+export function progressFor(learner: Learner, now: number) {
+  const completedLabs = completedLabsFor(learner);
+  const normalized = { ...learner, completions: Object.fromEntries(completedLabs.map(lab => [lab.slug, lab.completedAt])) };
+  const xp = completedLabs.reduce((sum, lab) => sum + lab.points, 0);
+  const badges = badgesFor(normalized);
+  return {
+    xp, level: levelFor(xp), completedLabs, completedCount: completedLabs.length,
+    totalLabs: labs.length, badges, earnedBadges: badges.filter(badge => badge.earned).length,
+    ...activity(normalized, now),
+    topics: categories.filter(category => category !== "All labs").map(category => ({
+      category, completed: completedLabs.filter(lab => lab.category === category).length,
+      total: labs.filter(lab => lab.category === category).length,
+    })),
+  };
+}
+export type LearnerProgress = ReturnType<typeof progressFor>;

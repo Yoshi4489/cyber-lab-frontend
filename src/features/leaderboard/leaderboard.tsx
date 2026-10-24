@@ -5,10 +5,12 @@ import { Button } from "@/components/ui/button";
 import { useLearner } from "@/features/learner/store";
 import { rankings } from "./rankings";
 import styles from "./leaderboard.module.css";
+import { DemoNotice } from "@/features/learner/demo-notice";
 
 export function Leaderboard() {
   const { learner, ready } = useLearner();
   const entries = rankings(learner);
+  if (!ready) return <p role="status">Getting the demo rankings ready…</p>;
   return (
     <div className={styles.page}>
       <header>
@@ -54,7 +56,7 @@ export function Leaderboard() {
       <section className={styles.tablePanel}>
         <div className={styles.tableHeading}>
           <h2>The curious community</h2>
-          <span>Global · All time</span>
+          <span>Demo · All time</span>
         </div>
         <div className={styles.scroll}>
           <table>
@@ -97,6 +99,8 @@ export function Leaderboard() {
           browser.
         </p>
       </section>
+      {learner.signedIn && <p className={styles.profileLink}><Link href="/profile">See your demo profile <ArrowRight size={15} /></Link></p>}
+      <div className={styles.localNotice}><DemoNotice /></div>
       {ready && !learner.signedIn && (
         <section className={styles.invite}>
           <div>
