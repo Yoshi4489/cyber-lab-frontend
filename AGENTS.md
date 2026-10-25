@@ -87,7 +87,10 @@ that holds every feature. Demo state never authorizes backend operations.
 
 Run `npm run lint`, `npm run typecheck`, and `npm run build` for frontend
 changes. For navigation, filtering, storage, or API boundary changes, also run
-`npm run test:e2e` after building. CI runs these gates for each pushed group on
+`npm run test:e2e` after building. Preview boundary changes also require
+`npm run test:preview-isolation` after building and installing Chromium; this
+checks a reachable upstream tripwire as well as browser calls and old cookies.
+CI runs these gates for each pushed group on
 `main` and `develop`; wait for its result before pushing the next group. Never present preview data as live targets,
 real points, or authenticated user progress.
 

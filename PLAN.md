@@ -8,7 +8,7 @@ a "Finish demo" button. Keep the current visual design and dependencies.
 Retain explicit live mode for separate integration tests; default preview must
 never call the backend, even when backend configuration is present.
 
-**Checkpoint: contract approved on October 23; Phases 1 through 3 complete, awaiting Phase 4 approval.**
+**Checkpoint: contract approved on October 23; Phases 1 through 3 complete. Phase 4 was approved October 25; application checks passed, while real-target acceptance awaits available host memory.**
 The approved boundary and backend semantics are in
 `../cyber-range-backend/docs/API.md` and the reconciled `ARCHITECTURE.md`.
 Exactly two implementation agents are authorized: frontend-only changes in this
@@ -94,11 +94,53 @@ Generated frontend types exactly match all 20 backend paths. The fresh database
 cluster was stopped and removed. Docker Engine was unreachable; Engine/router
 fixtures do not substitute for real isolation evidence.
 
-Phase 4 has not started and requires approval. It covers final browser and
-disposable-service acceptance, including real isolated-worker expiry, recovery,
-capacity, orphan cleanup and isolation probes. Redis execution and isolated-host
-availability remain open. No hosted configuration, real target, dependency or
-public-signup setting changed in Phase 3; local commits were not pushed.
+Phase 4 was approved October 25 and remains incomplete. Final frontend lint,
+typecheck, production build, BFF smoke and all 113 unit tests passed. The clean
+browser suites passed 135 checks in serial runs: 57 preview and 78 explicit-live.
+The initial preview run crossed a host interruption; its two affected desktop
+cases and the clean preview suite passed with unchanged source/time limits.
+Windows then refused fixture port 4101 before any live test ran. A validated,
+test-only `BACKEND_FIXTURE_PORT` override retained loopback binding/default 4101;
+all 78 live checks passed on an OS-selected available port. Both test listeners
+were confirmed closed afterward. No frontend application source, generated DTO,
+dependency or lockfile changed.
+
+The new repeatable `npm run test:preview-isolation` gate is also in CI. With
+backend settings populated, a reachable upstream tripwire and blocked browser
+API/external calls, it passed 30 page visits, all 14 API methods in both anonymous
+and old-live-cookie cases (28 no-store 404s), both operator 404s with live UI
+enabled, and simulated start/extend/finish/replay/stop. It observed zero upstream,
+browser API or external requests/page errors, and no live-cookie creation or
+mutation. Enhanced keyboard checks cover entry, session controls, progress links,
+mobile focus containment/Escape and reduced motion. One combined visual review
+of all 33 final preview captures covered desktop/tablet/mobile, both themes,
+entry, sessions, briefings and progress; no UI fixes or confirmation pass were
+needed. Captures and interrupted-run diagnostics are retained in the task's
+visualization folder.
+
+Backend final lint/typecheck/build/whitespace and all 222 tests passed with zero
+skips on disposable PostgreSQL 18.3/Redis 7.4.11 and the local TLS fixture, using
+Node 24.19.0 and one worker with standard isolation/deadlines. The real Redis
+run found a fast-worker delivery race; `5a1fbfc` fixes claiming an already
+delivered pending operation before its queued marker. Two regressions cover
+delayed marking and producer failure after enqueue. Generated frontend types
+still exactly match all 20 backend paths. No API shape or schema changed.
+
+The user confirmed the old two VMs were deleted and chose a fresh target-only
+Linux VM with the control plane on Windows. `CyberRangePhase4Target` is prepared
+powered off with an official checksum-verified Ubuntu Server installer, two CPUs,
+2 GiB RAM, a dynamic 32 GiB disk, private networking and a new operator key outside
+the repositories. A guarded start after the application checks found only about
+1.5 GiB free, below the 2.5 GiB requirement; no guest or target was started.
+Actual isolated-worker spawning, expiry, crash recovery, capacity, orphan cleanup
+and repeated network/cross-instance isolation probes remain blocked until the
+VM can be installed and prepared. Service/fake-runtime tests are not substitutes
+for those checks. Phase 4 is not complete; no later phase is started. Local
+commits were not pushed, and hosted configuration/signup settings remain unchanged.
+The disposable PostgreSQL cluster, Redis container, independent runtime database
+and restricted login were removed, along with their temporary credentials;
+their ports and test listeners are closed. The powered-off VM and its separate
+operator key are retained for the next acceptance attempt.
 
 After these four delivery phases, plan a separate live CTF milestone: author a
 reviewed beginner web challenge and solve check; connect real learner sessions,

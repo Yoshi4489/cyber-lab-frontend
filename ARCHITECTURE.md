@@ -17,7 +17,8 @@ catalog, and lab controls through server-only adapters. Neither mode establishes
 hosted acceptance, runtime isolation, or production launch readiness.
 
 **The contract diff was approved on 2026-10-23. Phases 1 through 3 are implemented;
-Phase 4 remains pending approval.**
+Phase 4 verification was approved on 2026-10-25. Application checks passed;
+real-target acceptance remains open pending the replacement test VM.**
 The approved specification is in the backend's [API contract](../cyber-range-backend/docs/API.md).
 It supersedes the older frontend-only assumptions about Better Auth, database
 ownership, lifecycle states, quotas, routing, flag storage, and missing backend
@@ -50,6 +51,14 @@ catalog and maintainer backend-status check as well as auth, email, lifecycle,
 and submission endpoints. Server-rendered pages must also avoid backend reads.
 `/instances` returns 404 even if `LIVE_INSTANCE_UI` is set. Existing backend
 configuration or a live-session cookie cannot authorize a preview action.
+
+The built-preview acceptance script uses a reachable loopback upstream tripwire,
+populated backend settings, blocked browser API/external calls and an old valid
+sealed cookie. It verifies page renders and direct API/operator 404s, with no
+upstream calls or live-cookie creation/mutation. CI runs that gate alongside
+separate preview/live browser configurations. The live fixture allows only its
+loopback port to be overridden for local OS reservations; no test value changes
+an application's server mode or backend origin.
 
 Explicit live mode retains the current integrated behavior and its separate
 test configuration. `/instances` additionally requires `LIVE_INSTANCE_UI`.

@@ -35,6 +35,13 @@ Live submissions/progress UI and database rankings remain unfinished. The
 loopback fixture verifies frontend behavior; it does not establish runtime
 isolation, worker availability, or production launch readiness.
 
+Phase 4 application verification (2026-10-25) passed lint, types, build, BFF
+smoke, the compiled-preview isolation tripwire, 113 unit tests and all 135
+browser checks (57 preview, 78 explicit-live). The combined visual review found
+no issues across three viewports and both themes. Real target acceptance remains
+open: the replacement disposable Linux VM is prepared powered off and awaits
+enough free host memory for installation. This does not complete Phase 4.
+
 See [PLAN.md](PLAN.md) for the current checkpoint and categorized push history.
 
 ## Run locally
@@ -194,7 +201,8 @@ can lose that temporary state. No demo value grants server access.
 | `src/features/landing/`, `preview/`, `guide/` | Guest entry, future-page previews, demo help |
 | `src/features/backend/` | Server-only backend adapters, BFF authorization, and maintainer status UI |
 | `src/components/ui/`, `src/styles/` | Small shared primitives, theme tokens, loading states |
-| `tests/e2e/`, `tests/fixtures/` | Browser flows and loopback-only backend fixture |
+| `tests/preview/`, `tests/e2e/`, `tests/unit/`, `tests/fixtures/` | Separate preview/live browser flows, unit checks and loopback backend fixture |
+| `scripts/test-preview-isolation.mjs` | Built-preview acceptance against a reachable loopback upstream tripwire |
 | `.github/workflows/frontend.yml` | Lint, types, build, and browser checks on main/develop pushes |
 
 Keep components and styles beside their feature. Reusable UI belongs in
@@ -212,18 +220,33 @@ npm run test:unit
 npm run build
 npm run test:bff
 npx playwright install chromium
+npm run test:preview-isolation
 npm run test:e2e
 ```
 
 Run `test:bff` after `build`. It starts the built frontend and a loopback backend
 on temporary ports, exercises the sealed-session lifecycle and submission path,
-then terminates both. `test:e2e` runs preview and explicit-live configurations
+then terminates both. After installing Chromium, run `test:preview-isolation`
+against that build. It starts a reachable loopback upstream tripwire, deliberately
+populates backend configuration, blocks browser API/external requests, and
+checks all learner pages plus direct API/operator 404s with and without an old
+valid live-session cookie. It exercises simulated sessions, requires zero
+upstream requests and no live-cookie creation or mutation, and stops its own
+servers. The tripwire first verifies it can record a request.
+
+`test:e2e` runs preview and explicit-live configurations
 sequentially against the same production build. Preview uses no backend process,
 with backend settings deliberately populated and API calls blocked in browser
 coverage. Live uses the loopback fixture. Both cover Chrome desktop, tablet,
 and mobile; run them individually with `test:e2e:preview` or `test:e2e:live`.
-Ports 3100 and 4101 must be free. Neither starts real targets or contacts your
-configured backend. CI runs the same gates and uploads browser failure reports.
+Port 3100 and the live fixture port (4101 by default) must be available. If
+Windows reserves 4101, set `BACKEND_FIXTURE_PORT` to another available decimal
+TCP port before running the live checks; for example,
+`$env:BACKEND_FIXTURE_PORT = "54001"` if that port is available. The override
+changes only the test port; its host remains `127.0.0.1`, and invalid values
+are rejected before a server starts. Neither configuration starts real targets
+or contacts your configured backend. CI runs the same gates and uploads browser
+failure reports.
 
 Push one logical group, wait for its CI result, then continue. Keep refactors,
 formatting, dependency changes, and features in separate commits.
