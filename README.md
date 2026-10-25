@@ -38,9 +38,14 @@ isolation, worker availability, or production launch readiness.
 Phase 4 application verification (2026-10-25) passed lint, types, build, BFF
 smoke, the compiled-preview isolation tripwire, 113 unit tests and all 135
 browser checks (57 preview, 78 explicit-live). The combined visual review found
-no issues across three viewports and both themes. Real target acceptance remains
-open: the replacement disposable Linux VM is prepared powered off and awaits
-enough free host memory for installation. This does not complete Phase 4.
+no issues across three viewports and both themes. On October 26 the replacement
+target-only Ubuntu Server VM was installed and prepared with authenticated
+Docker management and private-only networking. Real lifecycle/scoring, capacity,
+expiry, crash recovery, orphan cleanup and paired isolation acceptance passed.
+Phase 4's local checkpoint is complete. Temporary services were removed and the
+installed VM retained powered off. Authored playable CTF content and the real
+learner submission/progress flow remain the next separately approved milestone;
+production launch gates remain open.
 
 See [PLAN.md](PLAN.md) for the current checkpoint and categorized push history.
 

@@ -8,7 +8,7 @@ a "Finish demo" button. Keep the current visual design and dependencies.
 Retain explicit live mode for separate integration tests; default preview must
 never call the backend, even when backend configuration is present.
 
-**Checkpoint: contract approved on October 23; Phases 1 through 3 complete. Phase 4 was approved October 25; application checks passed, while real-target acceptance awaits available host memory.**
+**Checkpoint: contract approved on October 23; all four local delivery phases are complete. Replacement-host lifecycle, cleanup and isolation acceptance passed October 26. Pause before the separate playable-CTF milestone.**
 The approved boundary and backend semantics are in
 `../cyber-range-backend/docs/API.md` and the reconciled `ARCHITECTURE.md`.
 Exactly two implementation agents are authorized: frontend-only changes in this
@@ -94,8 +94,9 @@ Generated frontend types exactly match all 20 backend paths. The fresh database
 cluster was stopped and removed. Docker Engine was unreachable; Engine/router
 fixtures do not substitute for real isolation evidence.
 
-Phase 4 was approved October 25 and remains incomplete. Final frontend lint,
-typecheck, production build, BFF smoke and all 113 unit tests passed. The clean
+Phase 4 was approved October 25 and completed local acceptance October 26.
+Final frontend lint, typecheck, production build, BFF smoke and all 113 unit
+tests passed. The clean
 browser suites passed 135 checks in serial runs: 57 preview and 78 explicit-live.
 The initial preview run crossed a host interruption; its two affected desktop
 cases and the clean preview suite passed with unchanged source/time limits.
@@ -127,20 +128,49 @@ delayed marking and producer failure after enqueue. Generated frontend types
 still exactly match all 20 backend paths. No API shape or schema changed.
 
 The user confirmed the old two VMs were deleted and chose a fresh target-only
-Linux VM with the control plane on Windows. `CyberRangePhase4Target` is prepared
-powered off with an official checksum-verified Ubuntu Server installer, two CPUs,
-2 GiB RAM, a dynamic 32 GiB disk, private networking and a new operator key outside
-the repositories. A guarded start after the application checks found only about
-1.5 GiB free, below the 2.5 GiB requirement; no guest or target was started.
-Actual isolated-worker spawning, expiry, crash recovery, capacity, orphan cleanup
-and repeated network/cross-instance isolation probes remain blocked until the
-VM can be installed and prepared. Service/fake-runtime tests are not substitutes
-for those checks. Phase 4 is not complete; no later phase is started. Local
-commits were not pushed, and hosted configuration/signup settings remain unchanged.
-The disposable PostgreSQL cluster, Redis container, independent runtime database
-and restricted login were removed, along with their temporary credentials;
-their ports and test listeners are closed. The powered-off VM and its separate
-operator key are retained for the next acceptance attempt.
+Linux VM with the control plane on Windows. At the October 25 checkpoint the
+guarded start found only about 1.5 GiB free, below the 2.5 GiB requirement, and
+left it powered off. Disposable services and credentials were removed then;
+no replacement-host acceptance was claimed. Service/fake-runtime tests were not
+treated as substitutes for real target checks.
+
+On October 26 the user resumed VM testing and explicitly authorized closing
+Roblox and Discord to free memory. Ubuntu 26.04.1 Server installed successfully
+on the target-only VM. Its tested configuration uses one CPU, 2 GiB RAM and a
+32 GiB dynamic disk. Docker 29.9.2 advertises user namespaces, seccomp, AppArmor
+and private cgroup namespaces. Actual Engine mTLS accepts the worker identity
+and rejects missing client credentials, an untrusted CA and a wrong hostname.
+The temporary internet adapter was removed before target testing; private-only
+networking has no default route. Constrained digest-pinned ingress and the
+committed disposable HTTP fixture were prepared. The API, single serialized
+worker and fresh disposable PostgreSQL/Redis fixtures ran on Windows, separate
+from the existing demo database.
+
+Real HTTPS create/idempotency, solve scoring (10 then zero), extension, stop,
+expiry, concurrent node capacity, two-player ownership and mid-spawn crash
+recovery passed. Recovery reused the exact container and network without
+duplication. Both application-created targets passed runtime restriction and
+IPv4/IPv6/default-deny/cross-instance probes, with positive ingress/management
+baselines and actual bridge address inspection. Full and partial orphans were
+cleaned once; unrelated resources and trusted ingress survived. Cleanup failures
+retained capacity until absence was proven. Failed database/inventory/ownership/
+audit evidence prevented destructive work and recovered safely.
+
+The disposable ingress mount layout was corrected without changing application
+source. An incomplete crash-harness attempt was retained and repeated with an
+immediate pre-verified worker kill. All required acceptance then passed with
+unchanged product timeouts and no new dependencies or contract changes. The
+backend gate record gives exact scope and the loopback-only control-plane
+limitations. Twenty-three sanitized runtime observations are retained alongside
+the frontend captures in the task visualization folder.
+
+Final managed containers/networks/routes, active intents, reservations and
+pending operations were zero. API/worker drained; the runtime database/restricted
+login/private credentials, PostgreSQL cluster and Redis fixture were removed
+and listeners closed. The ingress tunnel closed and the installed VM remains
+powered off to release memory. Phase 4's local checkpoint is complete. Preview
+behavior and hosted configuration are unchanged; commits remain local. No later
+phase has started, and production launch gates remain open.
 
 After these four delivery phases, plan a separate live CTF milestone: author a
 reviewed beginner web challenge and solve check; connect real learner sessions,
