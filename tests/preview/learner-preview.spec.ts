@@ -124,7 +124,7 @@ test("storage denial keeps username entry usable in the current tab", async ({ p
 
 test("theme, reduced motion, keyboard focus and mobile navigation remain usable", async ({ page, isMobile }, testInfo) => {
   await page.emulateMedia({ colorScheme: "light", reducedMotion: "reduce" });
-  await page.goto("/login");
+  await page.goto("/login?next=%2Flabs%2Fcookie-monster%2Fsession");
   await expect(page.locator("body")).toHaveCSS("background-color", "rgb(246, 248, 245)");
   await page.keyboard.press("Tab");
   await expect(page.getByRole("link", { name: "Skip to content" })).toBeFocused();
@@ -136,12 +136,41 @@ test("theme, reduced motion, keyboard focus and mobile navigation remain usable"
   await page.reload();
   await expect(page.locator("body")).toHaveCSS("background-color", "rgb(18, 25, 20)");
   await expect(page.locator("html")).toHaveCSS("scroll-behavior", "auto");
+  expect(await page.getByRole("button", { name: "Continue", exact: true }).evaluate(element =>
+    getComputedStyle(element).transitionDuration.split(",").every(duration => Number.parseFloat(duration) < 0.01),
+  )).toBe(true);
   await page.screenshot({ path: testInfo.outputPath("preview-entry-dark.png"), fullPage: true });
   if (isMobile) {
     const menu = page.getByRole("button", { name: "Open navigation" });
-    await menu.click();
-    await expect(page.getByRole("dialog", { name: "Navigation" })).toBeVisible();
+    await menu.focus();
+    await page.keyboard.press("Enter");
+    const dialog = page.getByRole("dialog", { name: "Navigation" });
+    await expect(dialog).toBeVisible();
+    await dialog.getByRole("button", { name: "Close navigation" }).focus();
+    await page.keyboard.press("Shift+Tab");
+    expect(await dialog.evaluate(element => element.contains(document.activeElement))).toBe(true);
     await page.keyboard.press("Escape");
     await expect(menu).toBeFocused();
   }
+  await page.getByLabel("Username", { exact: true }).focus();
+  await page.keyboard.insertText("keyboard_owl");
+  await page.keyboard.press("Tab");
+  await expect(page.getByRole("button", { name: "Continue", exact: true })).toBeFocused();
+  await page.keyboard.press("Enter");
+  const start = page.getByRole("button", { name: "Start demo", exact: true });
+  await start.focus();
+  await expect(start).toBeFocused();
+  await page.keyboard.press("Space");
+  await expect(page.getByTestId("demo-status")).toHaveText("running");
+  const finish = page.getByRole("button", { name: "Finish demo", exact: true });
+  await finish.focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("status").filter({ hasText: "first completion" })).toContainText("+100");
+  await page.getByRole("link", { name: "View your dashboard" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("heading", { name: "Hey, keyboard_owl." })).toBeVisible();
+  await page.getByRole("link", { name: "See your demo profile", exact: true }).focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("keyboard_owl");
+  await expect(page.getByRole("region", { name: "Completed demo labs" }).getByRole("listitem")).toHaveCount(1);
 });
