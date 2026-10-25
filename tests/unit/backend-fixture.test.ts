@@ -1,7 +1,8 @@
 import type { AddressInfo } from "node:net";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { SignJWT } from "jose";
 import { createBackendFixture } from "../fixtures/backend.mjs";
+import { backendFixtureAddress } from "../fixtures/backend-origin.mjs";
 
 const serviceTokenSecret = "fixture-only-service-token-secret-value";
 const serviceTokenIssuer = "fixture-frontend";
@@ -15,6 +16,8 @@ const fixture = createBackendFixture({
   serviceTokenAudience,
 });
 let fixtureOrigin = "";
+
+afterEach(() => vi.unstubAllEnvs());
 
 beforeAll(async () => {
   await new Promise<void>((resolve, reject) => {
@@ -32,6 +35,19 @@ afterAll(async () => {
 });
 
 describe("loopback backend fixture", () => {
+  it("defaults to the established port and applies an explicit loopback-only override", () => {
+    vi.stubEnv("BACKEND_FIXTURE_PORT", undefined);
+    expect(backendFixtureAddress()).toEqual({ port: 4101, origin: "http://127.0.0.1:4101" });
+    vi.stubEnv("BACKEND_FIXTURE_PORT", "54001");
+    expect(backendFixtureAddress()).toEqual({ port: 54001, origin: "http://127.0.0.1:54001" });
+  });
+
+  it("rejects invalid ports and address-shaped overrides before a server is started", () => {
+    for (const value of ["0", "65536", "-1", "3.5", "3e3", "", " 4101 ", "127.0.0.1:4101"]) {
+      expect(() => backendFixtureAddress(value)).toThrow("BACKEND_FIXTURE_PORT");
+    }
+  });
+
   it("accepts only the service-token scope required by the operation", async () => {
     const readToken = await token("instances:read");
     const read = await fetch(`${fixtureOrigin}/v1/instances/${instanceId}`, {

@@ -1,5 +1,6 @@
 // Loopback-only test double; no lab runtime or credentials are involved.
 import { createServer } from "node:http";
+import { backendFixtureAddress } from "./backend-origin.mjs";
 import { jwtVerify } from "jose";
 
 const correlationId = "d48b142b-4929-44e9-8ac5-153771f475a4";
@@ -384,7 +385,7 @@ if (process.env.BACKEND_FIXTURE_LISTEN === "true") {
     serviceTokenIssuer: process.env.SERVICE_TOKEN_ISSUER,
     serviceTokenAudience: process.env.SERVICE_TOKEN_AUDIENCE,
   });
-  fixture.server.listen(4101, "127.0.0.1");
+  fixture.server.listen(backendFixtureAddress().port, "127.0.0.1");
   process.on("SIGTERM", () => fixture.server.close());
   process.on("SIGINT", () => fixture.server.close());
 }

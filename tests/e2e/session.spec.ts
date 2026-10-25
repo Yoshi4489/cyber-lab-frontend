@@ -1,6 +1,8 @@
 import { expect, test, type BrowserContext, type Page } from "@playwright/test";
+import { backendFixtureAddress } from "../fixtures/backend-origin.mjs";
 
 const origin = "http://127.0.0.1:3100";
+const fixtureOrigin = backendFixtureAddress().origin;
 const challengeId = "f5d66313-2997-45af-94d7-8bcad4d9fd4f";
 async function signIn(context: BrowserContext) {
   const response = await context.request.post("/api/auth/login", {
@@ -18,10 +20,10 @@ async function start(page: Page) {
 }
 
 test.beforeEach(async ({ request }) => {
-  await request.post("http://127.0.0.1:4101/scenario/lifecycle");
+  await request.post(`${fixtureOrigin}/scenario/lifecycle`);
 });
 test.afterEach(async ({ request }) => {
-  await request.post("http://127.0.0.1:4101/scenario/healthy");
+  await request.post(`${fixtureOrigin}/scenario/healthy`);
 });
 
 test("guest login returns to the lab; start, poll, extend and stop use the BFF", async ({ page }) => {

@@ -1,4 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
+import { backendFixtureAddress } from "./tests/fixtures/backend-origin.mjs";
+
+const fixture = backendFixtureAddress();
 
 /**
  * Deterministic, test-only values for the loopback backend fixture. They are
@@ -47,9 +50,9 @@ export default defineConfig({
   webServer: [
     {
       command: "node tests/fixtures/backend.mjs",
-      url: "http://127.0.0.1:4101/healthz",
+      url: `${fixture.origin}/healthz`,
       reuseExistingServer: false,
-      env: { BACKEND_FIXTURE_LISTEN: "true", ...loopbackBffEnv },
+      env: { BACKEND_FIXTURE_LISTEN: "true", BACKEND_FIXTURE_PORT: String(fixture.port), ...loopbackBffEnv },
     },
     {
       command: "npm run start -- --port 3100",
@@ -57,7 +60,7 @@ export default defineConfig({
       reuseExistingServer: false,
       env: {
         FRONTEND_MODE: "live",
-        BACKEND_URL: "http://127.0.0.1:4101",
+        BACKEND_URL: fixture.origin,
         BFF_PUBLIC_ORIGIN: "http://127.0.0.1:3100",
         LIVE_INSTANCE_UI: "true",
         ...loopbackBffEnv,

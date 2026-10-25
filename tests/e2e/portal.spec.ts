@@ -1,4 +1,7 @@
 import { expect, test } from "@playwright/test";
+import { backendFixtureAddress } from "../fixtures/backend-origin.mjs";
+
+const fixtureOrigin = backendFixtureAddress().origin;
 
 test("catalog shows loading, recoverable errors, and honest empty data", async ({ page, request }) => {
   let release!: () => void;
@@ -13,11 +16,11 @@ test("catalog shows loading, recoverable errors, and honest empty data", async (
   await page.getByRole("button", { name: "Retry loading labs" }).click();
   await expect(page.getByTestId("lab-card")).toHaveCount(1);
   try {
-    await request.post("http://127.0.0.1:4101/scenario/empty-catalog");
+    await request.post(`${fixtureOrigin}/scenario/empty-catalog`);
     await page.reload();
     await expect(page.getByRole("heading", { name: "No labs found" })).toBeVisible();
     await expect(page.getByTestId("lab-card")).toHaveCount(0);
-  } finally { await request.post("http://127.0.0.1:4101/scenario/healthy"); }
+  } finally { await request.post(`${fixtureOrigin}/scenario/healthy`); }
 });
 
 test("catalog combines search, category and difficulty; empty state can recover", async ({
@@ -152,7 +155,7 @@ test("connection check reaches the backend through the server adapter", async ({
   page,
   request,
 }) => {
-  await request.post("http://127.0.0.1:4101/scenario/healthy");
+  await request.post(`${fixtureOrigin}/scenario/healthy`);
   await page.goto("/guide");
   await page
     .getByText("Maintainer tools: optional backend connection check", {
@@ -173,11 +176,11 @@ test("connection boundary rejects wrong services, errors, and redirects without 
 }) => {
   try {
     for (const scenario of ["invalid", "error", "redirect"]) {
-      await request.post(`http://127.0.0.1:4101/scenario/${scenario}`);
+      await request.post(`${fixtureOrigin}/scenario/${scenario}`);
       const response = await request.get("/api/backend-status");
       expect(await response.json()).toEqual({ status: "unavailable" });
     }
   } finally {
-    await request.post("http://127.0.0.1:4101/scenario/healthy");
+    await request.post(`${fixtureOrigin}/scenario/healthy`);
   }
 });
