@@ -6,18 +6,28 @@ import { createInstance, destroyInstance, extendInstance, isActive, isTransition
 import { completeMutation, forgetInstance, mutationKey, rememberedInstance, rememberInstance } from "./storage";
 
 export function useInstance(challengeId: string) {
-  const { session, refresh } = useAuth();
-  const authenticated = session?.authenticated === true;
+  const { session, refresh, loading, sessionEpoch, isCurrentSession } = useAuth();
+  const authenticated = !loading && session?.authenticated === true;
   const [instance, setInstance] = useState<Instance | null>(null);
   const [error, setError] = useState<ApiFailure | null>(null);
   const [restoring, setRestoring] = useState(true);
   const [busy, setBusy] = useState<InstanceOperation | null>(null);
   const [storageWarning, setStorageWarning] = useState(false);
   const [reload, setReload] = useState(0);
+  const [retryAt, setRetryAt] = useState(0);
+  const cooldownUntil = useRef(0);
   const keys = useRef(new Map<string, string>());
   const operationController = useRef<AbortController | null>(null);
   const currentInstance = useRef<Instance | null>(null);
   const revision = useRef(0);
+  const fail = useCallback((failure: ApiFailure) => {
+    setError(failure);
+    if (failure.code === "RATE_LIMITED") {
+      const until = Date.now() + (failure.retryAfterMs ?? 60000);
+      cooldownUntil.current = until;
+      setRetryAt(until);
+    }
+  }, []);
 
   const apply = useCallback((value: Instance) => {
     currentInstance.current = value;
@@ -29,21 +39,24 @@ export function useInstance(challengeId: string) {
   useEffect(() => {
     const controller = new AbortController();
     const changed = ++revision.current;
-    currentInstance.current = null;
+    const known = currentInstance.current;
     operationController.current?.abort();
     operationController.current = null;
-    keys.current.clear();
     async function restore() {
       setInstance(null); setError(null); setBusy(null); setRestoring(true);
       if (authenticated) {
-        const remembered = rememberedInstance();
+        const remembered = known ? { instanceId: known.id } : rememberedInstance();
         if (remembered) {
           const result = await readInstance(remembered.instanceId, controller.signal);
-          if (controller.signal.aborted || changed !== revision.current) return;
-          if (result.ok) apply(result.value);
+          if (controller.signal.aborted || changed !== revision.current || !isCurrentSession(sessionEpoch)) return;
+          if (result.ok && result.value.id === remembered.instanceId) apply(result.value);
+          else if (result.ok) fail({ ok: false, code: "MALFORMED" });
           else {
-            setError(result);
-            if (result.code === "NOT_FOUND" || result.code === "UNAUTHORIZED") forgetInstance();
+            fail(result);
+            if (["NOT_FOUND", "UNAUTHORIZED", "FORBIDDEN"].includes(result.code)) {
+              forgetInstance(); currentInstance.current = null;
+            }
+            if (result.code === "UNAUTHORIZED") void refresh();
           }
         }
       }
@@ -51,7 +64,7 @@ export function useInstance(challengeId: string) {
     }
     void restore();
     return () => { controller.abort(); operationController.current?.abort(); };
-  }, [authenticated, challengeId, apply, reload]);
+  }, [authenticated, challengeId, apply, reload, sessionEpoch, isCurrentSession, fail, refresh]);
 
   const instanceId = instance?.id;
   const status = instance?.status;
@@ -62,18 +75,19 @@ export function useInstance(challengeId: string) {
     async function poll() {
       const changed = revision.current;
       const result = await readInstance(instanceId!, controller.signal);
-      if (controller.signal.aborted) return;
+      if (controller.signal.aborted || !isCurrentSession(sessionEpoch)) return;
       let delay = isTransitional(status!) ? 2000 : 15000;
       if (changed !== revision.current || operationController.current) {
         timer = setTimeout(poll, delay);
         return;
       }
       if (result.ok) {
+        if (result.value.id !== instanceId) { fail({ ok: false, code: "MALFORMED" }); return; }
         // A poll started before a mutation must not overwrite its accepted state.
         apply(result.value);
         if (!isActive(result.value.status) && result.value.status !== "stopping") return;
       } else {
-        setError(result);
+        fail(result);
         if (result.code === "UNAUTHORIZED") { forgetInstance(); void refresh(); return; }
         if (result.code === "NOT_FOUND") {
           forgetInstance(); currentInstance.current = null; setInstance(null); return;
@@ -84,10 +98,10 @@ export function useInstance(challengeId: string) {
     }
     timer = setTimeout(poll, isTransitional(status) ? 2000 : 15000);
     return () => { controller.abort(); clearTimeout(timer); };
-  }, [authenticated, instanceId, status, apply, refresh]);
+  }, [authenticated, instanceId, status, apply, refresh, sessionEpoch, isCurrentSession, fail]);
 
   const mutate = useCallback(async (operation: InstanceOperation) => {
-    if (!authenticated || operationController.current) return;
+    if (!authenticated || !isCurrentSession(sessionEpoch) || operationController.current || Date.now() < cooldownUntil.current) return;
     const owned = currentInstance.current;
     if (operation !== "create" && !owned) return;
     const id = operation === "create" ? challengeId : owned!.id;
@@ -98,15 +112,21 @@ export function useInstance(challengeId: string) {
     const key = mutationKey(operation, id, keys.current);
     const result = operation === "create" ? await createInstance(challengeId, key, controller.signal)
       : operation === "extend" ? await extendInstance(id, key, controller.signal) : await destroyInstance(id, key, controller.signal);
-    if (controller.signal.aborted || changed !== revision.current) return;
+    if (controller.signal.aborted || changed !== revision.current || !isCurrentSession(sessionEpoch)) return;
     operationController.current = null;
     setBusy(null);
-    if (result.ok) { completeMutation(operation, id, keys.current); apply(result.value.instance); }
+    if (result.ok) {
+      const matchesRequest = operation === "create" ? result.value.instance.challengeId === challengeId : result.value.instance.id === id;
+      if (!matchesRequest) { fail({ ok: false, code: "MALFORMED" }); return; }
+      completeMutation(operation, id, keys.current); apply(result.value.instance);
+    }
     else {
-      setError(result);
+      fail(result);
       if (result.code === "UNAUTHORIZED") void refresh();
     }
-  }, [authenticated, challengeId, apply, refresh]);
-  const retry = useCallback(() => setReload(value => value + 1), []);
-  return { instance, error, restoring, busy, storageWarning, mutate, retry };
+  }, [authenticated, challengeId, apply, refresh, sessionEpoch, isCurrentSession, fail]);
+  const retry = useCallback(() => {
+    if (Date.now() >= cooldownUntil.current) setReload(value => value + 1);
+  }, []);
+  return { instance, error, restoring, busy, storageWarning, mutate, retry, retryAt };
 }
