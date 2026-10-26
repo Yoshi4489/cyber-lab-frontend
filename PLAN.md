@@ -1,6 +1,6 @@
 # Development Plan: CiscoKU Lab
 
-## Harmless Welcome lab: Phase 1 in progress (October 26, 2026)
+## Harmless Welcome lab: Phase 1 complete (October 26, 2026)
 
 The user replaced the Cookie Monster milestone with harmless end-to-end testing.
 Confirmed choices: the exact shared `FLAG{WELCOME_TO_CISCO_FAMILY}`, local
@@ -30,8 +30,55 @@ coordination. No new dependencies or independent agent contract edits. Preserve
 the unrelated hosting-history edit below and the existing uncommitted frontend
 work. Generic auth/lifecycle/submission changes can be reviewed for reuse;
 Cookie Monster-specific content is excluded from Welcome acceptance. The prior
-frontend changes are not yet fully verified, and no backend target was written.
+generic session/submission drafts remain outside this phase's commits. No
+Welcome target was written; launch and submission remain unavailable.
 Earlier delivery evidence remains historical; production launch gates stay open.
+Source commits are `f4ca8ce` (real live learner identity) and `dd942c0`
+(harmless Welcome briefing and dedicated fixtures); no push was made.
+
+Phase 1 implements real live-mode account identity across navigation, home and
+dashboard, refresh/logout and account-change cancellation. Public signup routes
+to operator-account login; unfinished profile/rankings show honest placeholders.
+Welcome has a neutral illustration, a harmless briefing and a disabled Spawn
+Instance action. Direct session navigation returns to its briefing. The backend
+adds validated development/test-only settings and an opt-in, history-preserving
+Welcome catalog seed; production rejects the presence of either test setting.
+
+Verification: lint, typecheck, production build and BFF smoke passed. Unit tests
+passed 119 workspace cases (115 in the committed Phase 1 source; four belong to
+preserved future submission drafts). Browser checks passed 57 preview and 87
+explicit-live cases across desktop/mobile/tablet. Three obsolete live-copy test
+expectations were updated; a stale sign-in recovery regression was fixed and
+covered before the final clean live run. The final built-preview isolation check
+observed 30 page visits, 28 API 404s, two operator 404s, zero upstream/browser API/
+external calls, zero page errors and no live-cookie changes. The earlier 57-case
+preview run preceded the final live-only fixes; isolation was rechecked afterward.
+
+Independent browser acceptance used the built frontend, real compiled API and a
+fresh disposable PostgreSQL database with two verified learners: wrong-password
+401, login 200, HttpOnly cookie, Welcome-only 10-point catalog, refresh identity,
+disabled launch, direct-session redirect, logout 204 and revoked sessions all
+passed. No target or email was created, no later-phase API was called, and no
+unexpected browser outbound request occurred. Its temporary database was removed
+and frontend/API ports closed. Backend acceptance passed all 232 tests with no
+skips. Generated types exactly match all 20 existing API paths. One combined
+visual review of 24 entry/home/briefing/guide captures in three viewports and two
+themes found no defects; no confirmation pass was needed. Evidence is retained
+in the task artifact folder's `welcome-phase1-qa`.
+Final backend fixture cleanup also confirmed no owned database processes,
+clusters, Redis containers or private connection-state files remain; fixture
+ports are closed and the VM stayed off.
+An in-memory TypeScript check also passed for the approved source snapshot with
+the preserved session/submission drafts replaced by committed baseline files or
+excluded. Phase 1 does not depend on that future work.
+
+To repeat locally, follow the sibling `docs/LOCAL_DEVELOPMENT.md` Welcome setup
+with a disposable database and two verified operator accounts, then select
+explicit live frontend mode. Exercise login, Labs/Welcome, refresh, direct
+session navigation and logout. Keep the worker/VM off for this checkpoint.
+There are no unresolved Phase 1 questions. **Pause for approval of Phase 2:
+actual harmless target spawning/running on the isolated VM.** Scoring and live
+progress remain Phase 3; no hosted deployment or production acceptance is claimed.
 
 ## Mock preview and lifecycle hardening delivery (October 23, 2026)
 

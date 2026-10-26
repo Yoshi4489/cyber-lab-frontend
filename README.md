@@ -6,6 +6,14 @@ backend remains available through an explicitly enabled live integration.
 
 ## Current delivery
 
+The approved Welcome delivery currently connects real account entry and a
+harmless introductory listing/briefing in explicit live mode. Welcome's
+**Spawn Instance** button is disabled while launch is being prepared; direct
+session navigation returns to the briefing. Live home/navigation use the backend
+account, while unfinished progress/Profile/rankings show honest placeholders.
+The default preview below remains independent. Test results and the next
+approval checkpoint are recorded in [PLAN.md](PLAN.md).
+
 - Server-only `FRONTEND_MODE=preview|live`, defaulting to `preview`. Any other
   value fails closed into preview. Browser input cannot enable live services.
 - Username-only entry at `/login` and `/signup`, browser-local identity,

@@ -20,7 +20,7 @@ hosted acceptance, runtime isolation, or production launch readiness.
 phases are complete; replacement-VM fixture acceptance passed on 2026-10-26.
 Production gates remain open. The user replaced the Cookie Monster milestone
 with harmless Welcome testing; its replacement contract diff was approved on
-2026-10-26 and Phase 1 is in progress.**
+2026-10-26. Phase 1 accounts/catalog is complete; Phase 2 awaits approval.**
 The approved specification is in the backend's [API contract](../cyber-range-backend/docs/API.md).
 It supersedes the older frontend-only assumptions about Better Auth, database
 ownership, lifecycle states, quotas, routing, flag storage, and missing backend
@@ -33,8 +33,12 @@ Welcome displays `FLAG{WELCOME_TO_CISCO_FAMILY}` and awards 10 points once.
 It contains no vulnerability or exploit. A server-controlled development/test
 exception applies only to Welcome; all other labs retain dynamic flags, and
 production rejects the Welcome test settings. Ownership and expiry checks are
-unchanged. No Welcome backend is implemented. Generic uncommitted frontend work
-from the prior milestone is preserved for review; its verification is incomplete.
+unchanged. Phase 1 implements the backend's validated local test settings and
+conditional catalog seed, plus real live learner identity and Welcome briefing.
+The Welcome image/runtime and fixed-flag injection/verification are still planned.
+Launch is disabled and direct Welcome session navigation returns to the briefing.
+Generic session/submission drafts from the prior milestone remain preserved
+outside Phase 1 commits for later review.
 The delivery keeps preview as the default and adds no backend API shapes. Planned frontend
 `/api/profile` and `/api/leaderboard` reads forward existing generated DTOs,
 validate responses and retain the preview-first 404 gate. Live errors never
