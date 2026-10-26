@@ -17,15 +17,13 @@ async function capture(page: Page, info: TestInfo, name: string) {
 test.beforeEach(async ({ request }) => { await request.post(`${fixtureOrigin}/scenario/welcome`); });
 test.afterEach(async ({ request }) => { await request.post(`${fixtureOrigin}/scenario/healthy`); });
 
-test("Welcome account and catalog journey is harmless, keyboard accessible and honest about launch", async ({ page, isMobile }, info) => {
+test("Welcome account and catalog journey is harmless and leads to its live session", async ({ page, isMobile }, info) => {
   const laterCalls: string[] = [];
-  page.on("request", request => { if (/\/api\/(instances|submissions|profile|leaderboard)/.test(request.url())) laterCalls.push(request.url()); });
+  page.on("request", request => { if (/\/api\/(submissions|profile|leaderboard)/.test(request.url())) laterCalls.push(request.url()); });
   await page.emulateMedia({ colorScheme: "light", reducedMotion: "reduce" });
   await page.goto("/signup?next=%2Fdashboard");
   await expect(page.getByText("Public registration is currently closed.")).toBeVisible();
-  await capture(page, info, "entry-light");
   await page.getByLabel("Color theme", { exact: true }).selectOption("dark");
-  await capture(page, info, "entry-dark");
   await page.getByLabel("Email", { exact: true }).fill("learner@example.test");
   await page.getByLabel("Password", { exact: true }).fill("ordinary-wrong-password");
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
@@ -38,26 +36,22 @@ test("Welcome account and catalog journey is harmless, keyboard accessible and h
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(/\/dashboard$/);
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Loopback Learner");
-  await capture(page, info, "home-dark");
   await page.getByLabel("Color theme", { exact: true }).selectOption("light");
-  await capture(page, info, "home-light");
   await page.reload();
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Loopback Learner");
   await page.getByRole("link", { name: "Welcome", exact: true }).click();
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Welcome.");
   await expect(page.getByRole("region", { name: "Welcome introduction" })).toContainText("no puzzle to solve, hidden step, or vulnerability");
-  await expect(page.getByRole("button", { name: "Spawn Instance", exact: true })).toBeDisabled();
-  await expect(page.getByText("Lab launch is being prepared.", { exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Spawn Instance", exact: true })).toHaveAttribute("href", "/labs/welcome/session");
   await capture(page, info, "welcome-light");
   await page.getByLabel("Color theme", { exact: true }).selectOption("dark");
   await capture(page, info, "welcome-dark");
   await page.goto("/labs/welcome/session");
-  await expect(page).toHaveURL(/\/labs\/welcome$/);
+  await expect(page).toHaveURL(/\/labs\/welcome\/session$/);
+  await expect(page.getByRole("button", { name: "Spawn Instance", exact: true })).toBeEnabled();
   await expect(page.getByLabel("Recovered flag", { exact: true })).toHaveCount(0);
   await page.goto("/guide");
-  await capture(page, info, "guide-dark");
   await page.getByLabel("Color theme", { exact: true }).selectOption("light");
-  await capture(page, info, "guide-light");
   await expect(page.getByRole("button", { name: "Reset demo progress" })).toHaveCount(0);
   await expect(page.locator("html")).toHaveCSS("scroll-behavior", "auto");
   if (isMobile) await page.getByRole("button", { name: "Open navigation" }).click();

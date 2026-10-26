@@ -5,7 +5,6 @@ import { LabArt } from "@/features/catalog/lab-art";
 import { DifficultyBadge } from "@/features/catalog/lab-card";
 import { SaveButton } from "@/features/bookmarks/save-button";
 import { StartLab } from "@/features/session/start-lab";
-import { Button } from "@/components/ui/button";
 import styles from "./briefing.module.css";
 import { WelcomeInstructions } from "./welcome-instructions";
 export function LabBriefing({ lab }: { lab: LiveLab }) {
@@ -25,9 +24,9 @@ export function LabBriefing({ lab }: { lab: LiveLab }) {
         <section className={styles.launch}><span className={styles.icon}><FlaskConical size={27} /></span>
           <span className={styles.label}>PRIVATE LAB</span><h2>Ready to give it a try?</h2>
           <p>{welcome ? "Get to know your learning workspace with a simple Welcome page." : "Start your own instance. Submit a flag from a running lab to record a solve."}</p>
-          {welcome ? <><Button className="full-width" disabled>Spawn Instance</Button><p className={styles.once}>Lab launch is being prepared.</p></> : lab.kind === "web" ? <StartLab slug={lab.slug} /> : <p>Shell lab access is not available in the current HTTP lifecycle.</p>}
+          {lab.kind === "web" ? <StartLab slug={lab.slug} label={welcome ? "Spawn Instance" : "Start Lab"} /> : <p>Shell lab access is not available in the current HTTP lifecycle.</p>}
           <small>One active instance per account. Initial lifetime: 60 minutes.</small>
-          <p className={styles.once}>Only the first correct solve awards points.</p>
+          <p className={styles.once}>{welcome ? "Flag submission is being prepared." : "Only the first correct solve awards points."}</p>
         </section>
         <section className={styles.skills}><h2>Skills in focus</h2><div>{lab.tags.map(tag => <span key={tag}>{tag}</span>)}</div></section>
       </aside>

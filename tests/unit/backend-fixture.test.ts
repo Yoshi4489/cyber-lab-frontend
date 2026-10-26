@@ -3,6 +3,7 @@ import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest
 import { SignJWT } from "jose";
 import { createBackendFixture } from "../fixtures/backend.mjs";
 import { backendFixtureAddress } from "../fixtures/backend-origin.mjs";
+import { instanceSchema, mutationSchema } from "../../src/features/instances/client";
 
 const serviceTokenSecret = "fixture-only-service-token-secret-value";
 const serviceTokenIssuer = "fixture-frontend";
@@ -36,6 +37,40 @@ afterAll(async () => {
 });
 
 describe("loopback backend fixture", () => {
+  it("Welcome follows validated preparation states and replays the current owned instance", async () => {
+    await welcomeLogin();
+    const write = await token("instances:write");
+    const read = await token("instances:read");
+    const create = () => fetch(`${fixtureOrigin}/v1/instances`, { method: "POST", headers: { Authorization: `Bearer ${write}`, "Idempotency-Key": "create:welcome:0001" }, body: JSON.stringify({ challengeId: "88888888-8888-4888-8888-888888888888" }) });
+    const accepted = mutationSchema.parse(await (await create()).json());
+    expect(accepted.instance.status).toBe("pending");
+    expect(accepted.instance.url).toBeUndefined();
+    expect(Date.parse(accepted.instance.expiresAt) - Date.parse(accepted.instance.createdAt)).toBe(3_600_000);
+    const path = `${fixtureOrigin}/v1/instances/${accepted.instance.id}`;
+    const earlyExtend = await fetch(`${path}/extend`, { method: "POST", headers: { Authorization: `Bearer ${write}`, "Idempotency-Key": "extend:welcome:0001" } });
+    expect(earlyExtend.status).toBe(409);
+    const preparing = instanceSchema.parse(await (await fetch(path, { headers: { Authorization: `Bearer ${read}` } })).json());
+    expect(preparing.status).toBe("provisioning"); expect(preparing.url).toBeUndefined();
+    const running = instanceSchema.parse(await (await fetch(path, { headers: { Authorization: `Bearer ${read}` } })).json());
+    expect(running.status).toBe("running"); expect(running.url).toContain(running.id);
+    const replay = mutationSchema.parse(await (await create()).json());
+    expect(replay).toEqual({ instance: running, operationId: accepted.operationId, replayed: true });
+    const duplicate = await fetch(`${fixtureOrigin}/v1/instances`, { method: "POST", headers: { Authorization: `Bearer ${write}`, "Idempotency-Key": "create:welcome:0002" }, body: JSON.stringify({ challengeId: running.challengeId }) });
+    expect(duplicate.status).toBe(409);
+  });
+  it("Welcome refuses another learner's instance and removes access on stop", async () => {
+    await welcomeLogin();
+    const write = await token("instances:write");
+    const created = mutationSchema.parse(await (await fetch(`${fixtureOrigin}/v1/instances`, { method: "POST", headers: { Authorization: `Bearer ${write}`, "Idempotency-Key": "create:welcome:owner" }, body: JSON.stringify({ challengeId: "88888888-8888-4888-8888-888888888888" }) })).json());
+    await fetch(`${fixtureOrigin}/v1/auth/login`, { method: "POST", headers: { Authorization: "Bearer fixture-only-bff-authentication-value" }, body: JSON.stringify({ email: "learner-b@example.test", password: "correct-horse-battery-staple" }) });
+    const other = await token("instances:read", "f9e453ee-f3b2-4ff5-bc06-9686e53da379", "9b075fdc-7e4e-4b9f-b59b-7e82bd45f484");
+    const path = `${fixtureOrigin}/v1/instances/${created.instance.id}`;
+    expect((await fetch(path, { headers: { Authorization: `Bearer ${other}` } })).status).toBe(404);
+    const stopped = mutationSchema.parse(await (await fetch(path, { method: "DELETE", headers: { Authorization: `Bearer ${write}`, "Idempotency-Key": "destroy:welcome:0001" } })).json());
+    expect(stopped.instance.status).toBe("stopping"); expect(stopped.instance.url).toBeUndefined();
+    const terminal = instanceSchema.parse(await (await fetch(path, { headers: { Authorization: `Bearer ${await token("instances:read")}` } })).json());
+    expect(terminal.status).toBe("stopped");
+  });
   it("Welcome login rejects ordinary incorrect credentials without leaking an account", async () => {
     fixture.setScenario("welcome");
     for (const email of ["learner@example.test", "unknown@example.test"]) {
@@ -99,10 +134,15 @@ describe("loopback backend fixture", () => {
   });
 });
 
-function token(scope: string): Promise<string> {
-  return new SignJWT({ sid: sessionId, scope })
+async function welcomeLogin() {
+  await fetch(`${fixtureOrigin}/scenario/welcome`, { method: "POST" });
+  await fetch(`${fixtureOrigin}/v1/auth/login`, { method: "POST", headers: { Authorization: "Bearer fixture-only-bff-authentication-value" }, body: JSON.stringify({ email: "learner@example.test", password: "correct-horse-battery-staple" }) });
+}
+
+function token(scope: string, actorId = userId, actorSessionId = sessionId): Promise<string> {
+  return new SignJWT({ sid: actorSessionId, scope })
     .setProtectedHeader({ alg: "HS256", typ: "JWT" })
-    .setSubject(userId)
+    .setSubject(actorId)
     .setIssuer(serviceTokenIssuer)
     .setAudience(serviceTokenAudience)
     .setIssuedAt()

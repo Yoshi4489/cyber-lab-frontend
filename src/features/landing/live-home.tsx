@@ -15,7 +15,7 @@ export function LiveHome() {
     <section className={styles.hero}>
       <div className={styles.copy}>
         <h1 className={styles.identityHeading}>{session?.authenticated ? <>Welcome back,<br /><em>{session.user.displayName}.</em></> : <>Your curiosity.<br /><em>Your next superpower.</em></>}</h1>
-        <p>Start with Welcome, a harmless introduction to your learning workspace. There are no puzzles or hidden steps. Lab launch is being prepared.</p>
+        <p>Start with Welcome, a harmless introduction to your learning workspace. Prepare your own page, open it when it is ready, and explore at your own pace. There are no puzzles or hidden steps.</p>
         {loading ? <p role="status">Checking your account…</p> : error ? <><ApiError error={error} /><Button onClick={() => void refresh()}>Retry session</Button></> : <div className={styles.actions}>
           <Button asChild><Link href={session?.authenticated ? "/labs" : "/login"}>{session?.authenticated ? "Explore labs" : "Sign in to start"}<ArrowRight size={17} /></Link></Button>
           <Link href="/guide">Read the lab guide <ArrowRight size={15} /></Link>

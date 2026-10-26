@@ -1,8 +1,8 @@
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { BackendHttpError } from "@/features/backend/adapter";
 import { ReadError } from "@/features/backend/read-error";
 import { readChallenge } from "@/features/catalog/server";
-import { isWelcome, toLiveLab } from "@/features/catalog/live";
+import { toLiveLab } from "@/features/catalog/live";
 import { SessionPanel } from "@/features/session/session-panel";
 import { getFrontendMode } from "@/features/backend/frontend-mode";
 import { getPreviewLab } from "@/features/catalog/preview";
@@ -23,6 +23,5 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
       ...(error instanceof BackendHttpError && error.correlationId ? { correlationId: error.correlationId } : {}) }} />;
   }
   if (challenge.slug !== slug) notFound();
-  if (isWelcome(challenge)) redirect("/labs/welcome");
   return <SessionPanel lab={toLiveLab(challenge)} />;
 }

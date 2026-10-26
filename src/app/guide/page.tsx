@@ -19,11 +19,11 @@ export default function GuidePage() {
     <header><h1>A little guidance goes a long way.</h1><p>Get to know your account and the harmless Welcome introduction.</p></header>
     <div className={styles.grid}>
       <section><UserRound size={24} /><h2>Use your operator-provided account.</h2><p>Sign in with your email and password. Your real account stays with you as you browse and refresh. Public registration is closed.</p></section>
-      <section><FlaskConical size={24} /><h2>Begin with Welcome.</h2><p>Read the Welcome briefing in Labs. This is a harmless introduction with no puzzle, hidden step, or vulnerability. Lab launch is being prepared; Spawn Instance is not available yet.</p></section>
-      <section><Sparkles size={24} /><h2>A simple practice flow.</h2><p>Once launch and submission are ready, your assigned Welcome page will openly display a flag. You will copy it into your session and choose Submit flag. Account progress and rankings are being prepared.</p></section>
+      <section><FlaskConical size={24} /><h2>Begin with Welcome.</h2><p>Read the Welcome briefing in Labs. Choose Spawn Instance, then confirm the launch in your session. Preparation takes a moment; Open Welcome page appears only when it is running. This is a harmless introduction with no puzzle, hidden step, or vulnerability.</p></section>
+      <section><Sparkles size={24} /><h2>A simple practice flow.</h2><p>Your assigned Welcome page openly displays a flag. Submission and account progress are being prepared. The session begins with 60 minutes; extensions add 30 minutes up to two hours from the original start. Stop the instance when you finish.</p></section>
       <section><Bookmark size={24} /><h2>Keep your place.</h2><p>Save Welcome to find it again in Saved labs. Bookmarks and theme stay in this browser. Signing out ends your account session while keeping those preferences.</p></section>
     </div>
-    <section className={styles.panel} id="ground-rules"><h2>A friendly space for learning.</h2><p>Welcome will help you practice the basic lab flow. Use only your assigned page when launch becomes available. Other learners’ sessions and unrelated systems are outside this introduction.</p><Link href="/labs">Explore published labs <ArrowRight size={15} /></Link></section>
+    <section className={styles.panel} id="ground-rules"><h2>A friendly space for learning.</h2><p>Welcome helps you practice the basic lab flow. Use only your assigned page. Other learners’ sessions and unrelated systems are outside this introduction.</p><Link href="/labs">Explore published labs <ArrowRight size={15} /></Link></section>
     <details className={styles.details}><summary>Maintainer tools: optional backend connection check</summary><p>This checks API availability only. It does not start a target.</p><BackendStatus /></details>
   </div>;
   return (

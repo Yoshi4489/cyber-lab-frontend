@@ -1,5 +1,6 @@
 // Loopback-only test double; no lab runtime or credentials are involved.
 import { createServer } from "node:http";
+import { randomUUID } from "node:crypto";
 import { backendFixtureAddress } from "./backend-origin.mjs";
 import { jwtVerify } from "jose";
 
@@ -41,6 +42,8 @@ export function createBackendFixture({
   let scenario = "healthy";
   let liveInstance = null;
   const welcomeSessions = new Map();
+  const welcomeInstances = new Map();
+  const welcomeMutations = new Map();
   const acceptedMutations = new Map();
   const requests = [];
   const server = createServer(async (request, response) => {
@@ -49,6 +52,8 @@ export function createBackendFixture({
       scenario = requestUrl.slice("/scenario/".length);
       liveInstance = null;
       welcomeSessions.clear();
+      welcomeInstances.clear();
+      welcomeMutations.clear();
       acceptedMutations.clear();
       response.writeHead(204).end();
       return;
@@ -107,7 +112,7 @@ export function createBackendFixture({
         return;
       }
       if (requestUrl === "/v1/auth/login") {
-        if (scenario === "welcome") {
+        if (scenario.startsWith("welcome")) {
           const input = JSON.parse(body);
           if (!["learner@example.test", "learner-b@example.test"].includes(input.email) || input.password !== "correct-horse-battery-staple") {
             sendJson(response, 401, { code: "UNAUTHORIZED", message: "Invalid credentials.", correlationId }); return;
@@ -122,7 +127,7 @@ export function createBackendFixture({
         return;
       }
       if (requestUrl === "/v1/auth/session") {
-        if (scenario === "welcome") {
+        if (scenario.startsWith("welcome")) {
           const session = welcomeSessions.get(JSON.parse(body).sessionToken);
           if (!session) { sendJson(response, 401, { code: "UNAUTHORIZED", message: "Invalid session.", correlationId }); return; }
           sendJson(response, 200, session); return;
@@ -139,7 +144,7 @@ export function createBackendFixture({
         return;
       }
       if (requestUrl === "/v1/auth/logout") {
-        if (scenario === "welcome") welcomeSessions.delete(JSON.parse(body).sessionToken);
+        if (scenario.startsWith("welcome")) welcomeSessions.delete(JSON.parse(body).sessionToken);
         response.writeHead(204).end();
         return;
       }
@@ -147,13 +152,52 @@ export function createBackendFixture({
 
     if (requestUrl.startsWith("/v1/instances")) {
       const requiredScope = request.method === "GET" ? "instances:read" : "instances:write";
-      if (!(await hasServiceToken(request, requiredScope, serviceToken, serviceTokenConfig))) {
+      const actor = await serviceActor(request, requiredScope, serviceToken, serviceTokenConfig, scenario.startsWith("welcome") ? [...welcomeSessions.values()] : [resolvedSession]);
+      if (!actor) {
         sendJson(response, 401, {
           code: "UNAUTHORIZED",
           message: "Invalid service token.",
           correlationId,
         });
         return;
+      }
+      if (scenario.startsWith("welcome")) {
+        let input;
+        try { input = body ? JSON.parse(body) : null; } catch { input = null; }
+        const create = request.method === "POST" && requestUrl === "/v1/instances";
+        const id = create ? null : requestUrl.split("/")[3];
+        let owned = id ? welcomeInstances.get(id) : null;
+        if (!create && (!owned || owned.owner !== actor)) { sendJson(response, 404, { code: "NOT_FOUND", correlationId }); return; }
+        const operation = create ? "create" : request.method === "DELETE" ? "destroy" : "extend";
+        const key = `${actor}:${operation}:${request.headers["idempotency-key"]}`;
+        const fingerprint = create ? input?.challengeId : id;
+        const previous = welcomeMutations.get(key);
+        if (request.method !== "GET" && previous) {
+          if (previous.fingerprint !== fingerprint) { sendJson(response, 409, { code: "CONFLICT", correlationId }); return; }
+          sendJson(response, 202, { instance: welcomeInstances.get(previous.instanceId).instance, operationId: previous.operationId, replayed: true }); return;
+        }
+        if (create) {
+          if (input?.challengeId !== welcomeChallenge.id) { sendJson(response, 404, { code: "NOT_FOUND", correlationId }); return; }
+          if ([...welcomeInstances.values()].some(value => value.owner === actor && ["pending", "provisioning", "running", "stopping"].includes(value.instance.status))) { sendJson(response, 409, { code: "CONFLICT", correlationId }); return; }
+          const now = Date.now();
+          owned = { owner: actor, instance: { ...pendingInstance, id: randomUUID(), challengeId: welcomeChallenge.id, createdAt: new Date(now).toISOString(), expiresAt: new Date(now + 3600000).toISOString(), absoluteExpiresAt: new Date(now + 7200000).toISOString() } };
+          welcomeInstances.set(owned.instance.id, owned);
+        } else if (request.method === "GET") {
+          if (scenario === "welcome-capacity" && owned.instance.status === "pending") owned.instance = { ...owned.instance, status: "failed", failureCode: "node_capacity_exhausted", stoppedAt: new Date().toISOString() };
+          else if (owned.instance.status === "pending") owned.instance = { ...owned.instance, status: "provisioning" };
+          else if (owned.instance.status === "provisioning") owned.instance = { ...owned.instance, status: "running", startedAt: new Date().toISOString(), url: `https://welcome.example.test/labs/${owned.instance.id}/` };
+          else if (owned.instance.status === "stopping") owned.instance = { ...owned.instance, status: "stopped", stoppedAt: new Date().toISOString() };
+          sendJson(response, 200, owned.instance); return;
+        } else if (request.method === "DELETE") {
+          const withoutTarget = { ...owned.instance }; delete withoutTarget.url;
+          if (["pending", "provisioning", "running"].includes(owned.instance.status)) owned.instance = { ...withoutTarget, status: "stopping" };
+        } else if (request.method === "POST" && requestUrl.endsWith("/extend")) {
+          if (owned.instance.status !== "running" || Date.parse(owned.instance.expiresAt) <= Date.now()) { sendJson(response, 409, { code: "CONFLICT", correlationId }); return; }
+          owned.instance = { ...owned.instance, expiresAt: new Date(Math.min(Date.parse(owned.instance.expiresAt) + 1800000, Date.parse(owned.instance.absoluteExpiresAt))).toISOString() };
+        } else { sendJson(response, 404, { code: "NOT_FOUND", correlationId }); return; }
+        const operationId = randomUUID();
+        welcomeMutations.set(key, { instanceId: owned.instance.id, operationId, fingerprint });
+        sendJson(response, 202, { instance: owned.instance, operationId, replayed: false }); return;
       }
       if (scenario === "lifecycle") {
         const key = `${request.method}:${requestUrl}:${request.headers["idempotency-key"]}`;
@@ -241,7 +285,7 @@ export function createBackendFixture({
       return;
     }
     if (requestUrl === "/v1/challenges") {
-      sendJson(response, 200, { challenges: scenario === "empty-catalog" ? [] : [scenario === "welcome" ? welcomeChallenge : challenge], source: "database" });
+      sendJson(response, 200, { challenges: scenario === "empty-catalog" ? [] : [scenario.startsWith("welcome") ? welcomeChallenge : challenge], source: "database" });
       return;
     }
     if (requestUrl.startsWith("/v1/challenges/")) {
@@ -252,7 +296,7 @@ export function createBackendFixture({
           correlationId,
         });
       } else {
-        sendJson(response, 200, scenario === "welcome" ? welcomeChallenge : challenge);
+        sendJson(response, 200, scenario.startsWith("welcome") ? welcomeChallenge : challenge);
       }
       return;
     }
@@ -337,11 +381,15 @@ function parseServiceTokenConfig({ secret, issuer, audience }) {
 }
 
 async function hasServiceToken(request, requiredScope, fallbackToken, config) {
+  return Boolean(await serviceActor(request, requiredScope, fallbackToken, config));
+}
+
+async function serviceActor(request, requiredScope, fallbackToken, config, sessions = [resolvedSession]) {
   const authorization = request.headers.authorization;
-  if (!authorization?.startsWith("Bearer ")) return false;
+  if (!authorization?.startsWith("Bearer ")) return null;
 
   const token = authorization.slice("Bearer ".length);
-  if (!config) return token === fallbackToken;
+  if (!config) return token === fallbackToken ? resolvedSession.user.id : null;
 
   try {
     const { payload, protectedHeader } = await jwtVerify(
@@ -353,14 +401,9 @@ async function hasServiceToken(request, requiredScope, fallbackToken, config) {
         audience: config.audience,
       },
     );
-    return (
-      protectedHeader.typ === "JWT" &&
-      payload.sub === resolvedSession.user.id &&
-      payload.sid === resolvedSession.sessionId &&
-      payload.scope === requiredScope
-    );
+    return protectedHeader.typ === "JWT" && payload.scope === requiredScope && sessions.some(session => payload.sub === session.user.id && payload.sid === session.sessionId) ? payload.sub : null;
   } catch {
-    return false;
+    return null;
   }
 }
 
