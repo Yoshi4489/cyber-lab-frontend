@@ -9,23 +9,37 @@ type AuthState = {
   session: BrowserSession | null; loading: boolean; error: ApiFailure | null;
   refresh: () => Promise<void>; setSession: (session: BrowserSession) => void;
   signOut: () => Promise<ApiResult<undefined>>;
+  sessionEpoch: number; isCurrentSession: (epoch: number) => boolean;
 };
 const AuthContext = createContext<AuthState | null>(null);
+function clearRememberedSession() {
+  try { localStorage.removeItem("ciscoku:active-instance:v1"); } catch { /* Storage is optional. */ }
+  try {
+    for (const key of Object.keys(sessionStorage)) if (key.startsWith("ciscoku:mutation:")) sessionStorage.removeItem(key);
+  } catch { /* Storage is optional. */ }
+}
 export function AuthProvider({ children, mode }: { children: ReactNode; mode: FrontendMode }) {
   const [session, setSession] = useState<BrowserSession | null>(null);
   const [loading, setLoading] = useState(mode === "live");
   const generation = useRef(0);
+  const [sessionEpoch, setSessionEpoch] = useState(0);
   const [error, setError] = useState<ApiFailure | null>(null);
+  const invalidate = useCallback(() => {
+    const epoch = ++generation.current;
+    setSessionEpoch(epoch);
+    return epoch;
+  }, []);
+  const isCurrentSession = useCallback((epoch: number) => epoch === generation.current, []);
   const refresh = useCallback(async () => {
     if (mode !== "live") return;
-    const revision = ++generation.current;
+    const revision = invalidate();
     setLoading(true);
     const result = await readSession();
     if (revision !== generation.current) return;
     if (result.ok) { setSession(result.value); setError(null); }
     else { setSession(null); setError(result); }
     setLoading(false);
-  }, [mode]);
+  }, [mode, invalidate]);
   useEffect(() => {
     if (mode !== "live") return;
     const controller = new AbortController();
@@ -40,21 +54,25 @@ export function AuthProvider({ children, mode }: { children: ReactNode; mode: Fr
   }, [mode]);
   const signOut = useCallback(async () => {
     if (mode !== "live") return { ok: true as const, value: undefined };
+    const revision = invalidate();
+    setLoading(true);
     const result = await logout();
+    if (revision !== generation.current) return result;
+    setLoading(false);
     if (result.ok) {
-      generation.current++;
       setSession({ authenticated: false });
       setError(null);
-      try { localStorage.removeItem("ciscoku:active-instance:v1"); } catch { /* Storage is optional. */ }
+      clearRememberedSession();
       window.dispatchEvent(new Event("ciscoku:session-ended"));
     } else setError(result);
     return result;
-  }, [mode]);
+  }, [mode, invalidate]);
   const updateSession = useCallback((value: BrowserSession) => {
-    generation.current++;
+    invalidate();
+    clearRememberedSession();
     setSession(value); setLoading(false); setError(null);
-  }, []);
-  const value = useMemo(() => ({ mode, session, loading, error, refresh, setSession: updateSession, signOut }), [mode, session, loading, error, refresh, updateSession, signOut]);
+  }, [invalidate]);
+  const value = useMemo(() => ({ mode, session, loading, error, refresh, setSession: updateSession, signOut, sessionEpoch, isCurrentSession }), [mode, session, loading, error, refresh, updateSession, signOut, sessionEpoch, isCurrentSession]);
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 export function useAuth() {

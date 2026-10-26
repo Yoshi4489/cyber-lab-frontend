@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -16,7 +16,9 @@ const headings: Record<Mode, string> = {
 };
 export function AuthForm({ mode, token, destination }: { mode: Mode; token?: string; destination?: string }) {
   const router = useRouter();
-  const { setSession, refresh } = useAuth();
+  const { setSession, refresh, sessionEpoch, isCurrentSession } = useAuth();
+  const mounted = useRef(true);
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<ApiFailure | null>(null);
   const [complete, setComplete] = useState(false);
@@ -24,7 +26,7 @@ export function AuthForm({ mode, token, destination }: { mode: Mode; token?: str
   const needsPassword = mode === "login" || mode === "reset-confirm";
   const invalidToken = mode.endsWith("-confirm") && !/^[A-Za-z0-9_-]{43}$/.test(token ?? "");
   return <div className={styles.onboarding}>
-    <section className={styles.intro}><p className="eyebrow">YOUR LEARNING SPACE</p><h1>A little curiosity.<br />A lot of possibility.</h1><p>Sign in to your account to start a private lab and track your progress.</p><p>Public registration is currently closed.</p></section>
+    <section className={styles.intro}><p className="eyebrow">YOUR LEARNING SPACE</p><h1>A little curiosity.<br />A lot of possibility.</h1><p>Sign in with your operator-provided account and explore the Welcome introduction.</p><p>Public registration is currently closed.</p></section>
     <section className={styles.formPanel}>
       <h2>{headings[mode]}</h2>
       {invalidToken ? <p role="alert">This link is invalid. Request a new link.</p> : complete ? <p role="status">{mode.endsWith("-request") ? "If the account is eligible, a link has been sent." : mode === "verification-confirm" ? "Email verified. You can now return to your lab." : "Password updated. Sign in with your new password."}</p> :
@@ -37,7 +39,9 @@ export function AuthForm({ mode, token, destination }: { mode: Mode; token?: str
           ? await login(String(data.get("email")), String(data.get("password")))
           : await emailAction(mode === "verification-request" ? "verification/request" : mode === "verification-confirm" ? "verification/confirm" : mode === "reset-request" ? "password-reset/request" : "password-reset/confirm",
             needsEmail ? { email: String(data.get("email")) } : mode === "reset-confirm" ? { token: token!, newPassword: String(data.get("password")) } : { token: token! });
+        if (!mounted.current) return;
         setBusy(false);
+        if (!isCurrentSession(sessionEpoch)) return;
         if (!result.ok) { setError(result); return; }
         if (mode === "login" && result.value && "authenticated" in result.value) {
           setSession(result.value);
@@ -49,7 +53,7 @@ export function AuthForm({ mode, token, destination }: { mode: Mode; token?: str
       }}>
         {needsEmail && <><label htmlFor="email">Email</label><input id="email" name="email" type="email" autoComplete="email" maxLength={320} required /></>}
         {needsPassword && <><label htmlFor="password">{mode === "reset-confirm" ? "New password" : "Password"}</label><input id="password" name="password" type="password" autoComplete={mode === "login" ? "current-password" : "new-password"} minLength={12} maxLength={1024} required /></>}
-        <ApiError error={error} />
+        {mode === "login" && error?.code === "UNAUTHORIZED" ? <p role="alert">Email or password was not recognized. Check them and try again.</p> : <ApiError error={error} />}
         <Button className="full-width" disabled={busy}>{busy ? "Please wait…" : mode === "login" ? "Sign in" : mode.endsWith("-request") ? "Send link" : "Confirm"}</Button>
       </form>}
       {mode === "login" && <><Link href="/forgot-password">Forgot password?</Link><br /><Link href="/verify-email">Resend verification email</Link></>}

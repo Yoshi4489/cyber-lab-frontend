@@ -26,5 +26,5 @@ export function emailAction(action: EmailAction, input: { email: string } | { to
   });
 }
 export function safeDestination(value?: string): string {
-  return value && /^\/(?:labs(?:\/[a-z0-9-]+(?:\/session)?)?|dashboard|profile)?$/.test(value) ? value : "/labs";
+  return typeof value === "string" && /^\/(?:labs(?:\/[a-z0-9-]+(?:\/session)?)?|dashboard|profile)?$/.test(value) ? value : "/labs";
 }

@@ -1,17 +1,18 @@
 import { expect, test } from "@playwright/test";
 
-test("guest home introduces the demo and returning learners see their dashboard", async ({
-  page,
-}) => {
+test("live home uses only the real account even when old demo state exists", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("ciscoku:learner:v1", JSON.stringify({ version: 1, username: "old_demo_owl", signedIn: true, completions: { "cookie-monster": Date.now() } })));
   await page.goto("/");
-  await expect(page.getByRole("heading", { level: 1 })).toContainText(
-    "Your curiosity.",
-  );
-  await page.getByRole("link", { name: "Join the demo", exact: true }).click();
-  await page.getByLabel("Username", { exact: true }).fill("home_owl");
-  await page.getByRole("button", { name: "Continue", exact: true }).click();
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Your curiosity.");
+  await page.getByRole("link", { name: "Sign in to start" }).click();
+  await page.getByLabel("Email", { exact: true }).fill("learner@example.test");
+  await page.getByLabel("Password", { exact: true }).fill("correct-horse-battery-staple");
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await expect(page).toHaveURL(/\/labs$/);
   await page.goto("/");
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-    "Hey, home_owl.",
-  );
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Welcome back,Loopback Learner.");
+  await expect(page.getByRole("main")).not.toContainText("old_demo_owl");
+  await expect(page.getByRole("region", { name: "Demo learning progress" })).toHaveCount(0);
+  await page.reload();
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Loopback Learner");
 });

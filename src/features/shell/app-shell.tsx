@@ -84,7 +84,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <span>
             CiscoKU Lab <span>·</span> Learn a little. Grow a lot.
           </span>
-          <Link href="/guide">Demo guide & information ↗</Link>
+          <Link href="/guide">{mode === "preview" ? "Demo guide & information ↗" : "Lab guide & information ↗"}</Link>
         </footer>
       </div>
     </div>

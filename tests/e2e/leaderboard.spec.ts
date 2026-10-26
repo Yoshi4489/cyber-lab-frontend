@@ -1,21 +1,15 @@
 import { expect, test } from "@playwright/test";
 
-test("demo leaderboard stays separate from authenticated lab activity", async ({
-  page,
-}) => {
-  await page.goto("/leaderboard");
-  await expect(
-    page.getByText(/This is not a live university leaderboard/),
-  ).toBeVisible();
-  await page.getByRole("link", { name: "Join the demo" }).click();
-  await page.getByLabel("Username", { exact: true }).fill("ranking_owl");
-  await page.getByRole("button", { name: "Continue", exact: true }).click();
-  await page.goto("/leaderboard");
-  const row = page.getByRole("row").filter({ hasText: "ranking_owl" });
-  await expect(row).toContainText("#8");
-  await page.goto("/labs/intro-web");
-  await expect(page.getByRole("link", { name: "Start Lab" })).toHaveAttribute("href", "/login?next=%2Flabs%2Fintro-web%2Fsession");
-  await page.goto("/leaderboard");
-  await expect(row).toContainText("#8");
-  await expect(row.getByRole("cell").last()).toHaveText("0");
+test("unfinished live rankings and Profile have honest placeholders without scores", async ({ page }) => {
+  const progressCalls: string[] = [];
+  page.on("request", request => { if (/\/api\/(profile|leaderboard)/.test(request.url())) progressCalls.push(request.url()); });
+  for (const [path, heading] of [["/leaderboard", "Rankings are on their way."], ["/profile", "Your profile is taking shape."]]) {
+    await page.goto(path!);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(heading!);
+    await expect(page.getByRole("table")).toHaveCount(0);
+    await expect(page.getByRole("main")).not.toContainText("demo XP");
+    await expect(page.getByRole("main")).toContainText("does not show totals yet");
+    await expect(page.getByRole("link", { name: "Explore published labs" })).toBeVisible();
+  }
+  expect(progressCalls).toEqual([]);
 });

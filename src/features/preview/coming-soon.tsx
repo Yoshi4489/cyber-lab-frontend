@@ -3,7 +3,7 @@ import { ArrowRight, Map, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import styles from "./preview.module.css";
 
-export function ComingSoon({ kind }: { kind: "paths" | "profile" }) {
+export function ComingSoon({ kind, preview = true }: { kind: "paths" | "profile"; preview?: boolean }) {
   const paths = kind === "paths";
   const Icon = paths ? Map : UserRound;
   return (
@@ -26,7 +26,7 @@ export function ComingSoon({ kind }: { kind: "paths" | "profile" }) {
       <div>
         <Button asChild>
           <Link href="/labs">
-            Explore the sample labs <ArrowRight size={16} />
+            {preview ? "Explore the sample labs" : "Explore published labs"} <ArrowRight size={16} />
           </Link>
         </Button>
         <Button variant="secondary" asChild>

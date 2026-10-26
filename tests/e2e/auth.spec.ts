@@ -31,3 +31,43 @@ test("verification and reset use generic acknowledgements and reject invalid lin
   await page.getByRole("button", { name: "Confirm", exact: true }).click();
   await expect(page.getByRole("status")).toContainText("Email verified");
 });
+
+test("a session refresh during login ignores the old result and makes the form usable again", async ({ page, isMobile }) => {
+  let reads = 0;
+  await page.route("**/api/auth/session", route => route.fulfill({
+    status: ++reads === 1 ? 503 : 200,
+    contentType: "application/json",
+    body: JSON.stringify(reads === 1 ? { code: "INTERNAL_ERROR" } : { authenticated: false }),
+  }));
+  let release!: () => void;
+  const gate = new Promise<void>(resolve => { release = resolve; });
+  let entered!: () => void;
+  const held = new Promise<void>(resolve => { entered = resolve; });
+  let attempts = 0;
+  await page.route("**/api/auth/login", async route => {
+    if (++attempts > 1) { await route.continue(); return; }
+    entered();
+    await gate;
+    await route.fulfill({ status: 401, contentType: "application/json", body: JSON.stringify({ code: "UNAUTHORIZED" }) });
+  });
+  await page.goto("/login");
+  await page.getByLabel("Email", { exact: true }).fill("learner@example.test");
+  await page.getByLabel("Password", { exact: true }).fill("correct-horse-battery-staple");
+  if (isMobile) await page.getByRole("button", { name: "Open navigation" }).click();
+  await expect(page.getByRole("button", { name: "Retry session", exact: true })).toBeVisible();
+  if (isMobile) await page.keyboard.press("Escape");
+  const submit = page.getByRole("main").getByRole("button", { name: "Sign in", exact: true });
+  await submit.click(); await held;
+  if (isMobile) await page.getByRole("button", { name: "Open navigation" }).click();
+  await page.getByRole("button", { name: "Retry session", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Retry session", exact: true })).toHaveCount(0);
+  if (isMobile) await page.keyboard.press("Escape");
+  await expect(page.getByRole("button", { name: "Please wait…", exact: true })).toBeDisabled();
+  release();
+  await expect(submit).toBeEnabled();
+  await expect(page.getByRole("main").getByRole("alert")).toHaveCount(0);
+  expect(attempts).toBe(1);
+  await submit.click();
+  await expect(page).toHaveURL(/\/labs$/);
+  expect(attempts).toBe(2);
+});

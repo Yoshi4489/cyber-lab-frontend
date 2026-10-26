@@ -1,14 +1,13 @@
 import { expect, test } from "@playwright/test";
 
-test("paths and profile clearly explain their preview scope", async ({
+test("live paths and profile explain unfinished features without sample progress", async ({
   page,
 }) => {
-  for (const route of ["/paths", "/profile"]) {
+  for (const [route, heading] of [["/paths", "Learning paths are growing."], ["/profile", "Your profile is taking shape."]] as const) {
     await page.goto(route);
-    await expect(
-      page.getByText("Preview · coming in a later phase", { exact: true }),
-    ).toBeVisible();
-    await page.getByRole("link", { name: "Explore the sample labs" }).click();
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(heading);
+    await expect(page.getByRole("main")).not.toContainText("demo XP");
+    await page.getByRole("link", { name: "Explore published labs" }).click();
     await expect(page).toHaveURL(/\/labs$/);
   }
   await page.goto("/paths/web-security");
