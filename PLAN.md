@@ -1,6 +1,6 @@
 # Development Plan: CiscoKU Lab
 
-## Harmless Welcome lab: Phase 2 runtime verified (October 26, 2026)
+## Harmless Welcome lab: Phase 2 complete locally (October 26, 2026)
 
 The user replaced the Cookie Monster milestone with harmless end-to-end testing.
 Confirmed choices: the exact shared `FLAG{WELCOME_TO_CISCO_FAMILY}`, local
@@ -133,11 +133,11 @@ Final cleanup: the target, network and route, acceptance database/role, API,
 worker, frontend, private runtime files and tunnel were removed/stopped. The
 retained target VM is confirmed powered off. The shared test PostgreSQL process
 was already stopped; its verified owned cluster/state were removed after PID
-and closed-port checks. Redis' loopback port is closed, but Docker Desktop is
-not responding to inventory requests after restart; its retained owned-container
-state is preserved until inventory/removal can be confirmed. Windows is locked,
-so UI inspection stopped and the user was asked to unlock it. This final cleanup
-check remains open; Phase 3 has not started.
+and closed-port checks. After the user unlocked the desktop, Docker responded:
+the retained Redis container was confirmed absent and the entire phase-labeled
+container inventory was empty. Its stale ownership record was removed only
+after those checks. Both fixture ports are closed and no phase-owned service
+state files remain. Phase 2 cleanup is complete; Phase 3 awaits approval.
 Frontend source is split into `0e76aa2` (session safeguards) and `83ba5ce`
 (Welcome launch and browser fixtures). No push was made.
 
