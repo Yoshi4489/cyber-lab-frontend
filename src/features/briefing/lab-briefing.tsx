@@ -1,12 +1,15 @@
 import Link from "next/link";
 import { ArrowLeft, FlaskConical, Zap } from "lucide-react";
-import type { LiveLab } from "@/features/catalog/live";
+import { isWelcome, type LiveLab } from "@/features/catalog/live";
 import { LabArt } from "@/features/catalog/lab-art";
 import { DifficultyBadge } from "@/features/catalog/lab-card";
 import { SaveButton } from "@/features/bookmarks/save-button";
 import { StartLab } from "@/features/session/start-lab";
+import { Button } from "@/components/ui/button";
 import styles from "./briefing.module.css";
+import { WelcomeInstructions } from "./welcome-instructions";
 export function LabBriefing({ lab }: { lab: LiveLab }) {
+  const welcome = isWelcome(lab);
   return <div>
     <Link href="/labs" className={styles.back}><ArrowLeft size={15} />Back to all labs</Link>
     <header className={styles.heading}><div>
@@ -17,12 +20,12 @@ export function LabBriefing({ lab }: { lab: LiveLab }) {
     <div className={styles.layout}>
       <div className={styles.content}><LabArt lab={lab} large /><section className={styles.section}>
         <p className="eyebrow">YOUR STARTING POINT</p><h2>A little context before you begin.</h2><p>{lab.summary}</p>
-      </section></div>
+      </section>{welcome && <WelcomeInstructions />}</div>
       <aside className={styles.aside}>
         <section className={styles.launch}><span className={styles.icon}><FlaskConical size={27} /></span>
           <span className={styles.label}>PRIVATE LAB</span><h2>Ready to give it a try?</h2>
-          <p>Start your own instance. Submit a flag from a running lab to record a solve.</p>
-          {lab.kind === "web" ? <StartLab slug={lab.slug} /> : <p>Shell lab access is not available in the current HTTP lifecycle.</p>}
+          <p>{welcome ? "Get to know your learning workspace with a simple Welcome page." : "Start your own instance. Submit a flag from a running lab to record a solve."}</p>
+          {welcome ? <><Button className="full-width" disabled>Spawn Instance</Button><p className={styles.once}>Lab launch is being prepared.</p></> : lab.kind === "web" ? <StartLab slug={lab.slug} /> : <p>Shell lab access is not available in the current HTTP lifecycle.</p>}
           <small>One active instance per account. Initial lifetime: 60 minutes.</small>
           <p className={styles.once}>Only the first correct solve awards points.</p>
         </section>

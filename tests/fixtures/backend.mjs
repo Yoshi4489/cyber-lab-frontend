@@ -15,6 +15,7 @@ const challenge = {
   kind: "web",
   tags: ["http", "intro"],
 };
+const welcomeChallenge = { ...challenge, id: "88888888-8888-4888-8888-888888888888", slug: "welcome", title: "Welcome", summary: "A harmless introduction to your learning workspace.", points: 10, tags: ["introduction", "getting-started"] };
 
 /**
  * @param {{
@@ -39,6 +40,7 @@ export function createBackendFixture({
   });
   let scenario = "healthy";
   let liveInstance = null;
+  const welcomeSessions = new Map();
   const acceptedMutations = new Map();
   const requests = [];
   const server = createServer(async (request, response) => {
@@ -46,6 +48,7 @@ export function createBackendFixture({
     if (request.method === "POST" && requestUrl.startsWith("/scenario/")) {
       scenario = requestUrl.slice("/scenario/".length);
       liveInstance = null;
+      welcomeSessions.clear();
       acceptedMutations.clear();
       response.writeHead(204).end();
       return;
@@ -104,10 +107,26 @@ export function createBackendFixture({
         return;
       }
       if (requestUrl === "/v1/auth/login") {
+        if (scenario === "welcome") {
+          const input = JSON.parse(body);
+          if (!["learner@example.test", "learner-b@example.test"].includes(input.email) || input.password !== "correct-horse-battery-staple") {
+            sendJson(response, 401, { code: "UNAUTHORIZED", message: "Invalid credentials.", correlationId }); return;
+          }
+          const second = input.email === "learner-b@example.test";
+          const token = (second ? "B" : "A").repeat(43);
+          const session = second ? { ...resolvedSession, sessionId: "9b075fdc-7e4e-4b9f-b59b-7e82bd45f484", user: { ...resolvedSession.user, id: "f9e453ee-f3b2-4ff5-bc06-9686e53da379", email: input.email, displayName: "Second Learner" } } : resolvedSession;
+          welcomeSessions.set(token, session);
+          sendJson(response, 200, { ...session, sessionToken: token }); return;
+        }
         sendJson(response, 200, { ...resolvedSession, sessionToken });
         return;
       }
       if (requestUrl === "/v1/auth/session") {
+        if (scenario === "welcome") {
+          const session = welcomeSessions.get(JSON.parse(body).sessionToken);
+          if (!session) { sendJson(response, 401, { code: "UNAUTHORIZED", message: "Invalid session.", correlationId }); return; }
+          sendJson(response, 200, session); return;
+        }
         sendJson(response, 200, resolvedSession);
         return;
       }
@@ -120,6 +139,7 @@ export function createBackendFixture({
         return;
       }
       if (requestUrl === "/v1/auth/logout") {
+        if (scenario === "welcome") welcomeSessions.delete(JSON.parse(body).sessionToken);
         response.writeHead(204).end();
         return;
       }
@@ -221,7 +241,7 @@ export function createBackendFixture({
       return;
     }
     if (requestUrl === "/v1/challenges") {
-      sendJson(response, 200, { challenges: scenario === "empty-catalog" ? [] : [challenge], source: "database" });
+      sendJson(response, 200, { challenges: scenario === "empty-catalog" ? [] : [scenario === "welcome" ? welcomeChallenge : challenge], source: "database" });
       return;
     }
     if (requestUrl.startsWith("/v1/challenges/")) {
@@ -232,7 +252,7 @@ export function createBackendFixture({
           correlationId,
         });
       } else {
-        sendJson(response, 200, challenge);
+        sendJson(response, 200, scenario === "welcome" ? welcomeChallenge : challenge);
       }
       return;
     }

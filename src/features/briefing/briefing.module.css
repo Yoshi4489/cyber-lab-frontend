@@ -77,6 +77,15 @@
   color: var(--primary);
   margin-top: 3px;
 }
+.section ol {
+  list-style: decimal;
+  padding-left: 22px;
+  margin: 20px 0;
+}
+.section ol li {
+  display: list-item;
+  margin: 10px 0;
+}
 .aside {
   display: grid;
   gap: 20px;
