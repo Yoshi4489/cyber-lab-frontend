@@ -20,7 +20,8 @@ hosted acceptance, runtime isolation, or production launch readiness.
 phases are complete; replacement-VM fixture acceptance passed on 2026-10-26.
 Production gates remain open. The user replaced the Cookie Monster milestone
 with harmless Welcome testing; its replacement contract diff was approved on
-2026-10-26. Phase 1 accounts/catalog is complete; Phase 2 awaits approval.**
+2026-10-26. Phase 1 accounts/catalog and Phase 2 local spawn/running acceptance
+are complete; Phase 3 submission/persistence awaits approval.**
 The approved specification is in the backend's [API contract](../cyber-range-backend/docs/API.md).
 It supersedes the older frontend-only assumptions about Better Auth, database
 ownership, lifecycle states, quotas, routing, flag storage, and missing backend
@@ -35,10 +36,15 @@ exception applies only to Welcome; all other labs retain dynamic flags, and
 production rejects the Welcome test settings. Ownership and expiry checks are
 unchanged. Phase 1 implements the backend's validated local test settings and
 conditional catalog seed, plus real live learner identity and Welcome briefing.
-The Welcome image/runtime and fixed-flag injection/verification are still planned.
-Launch is disabled and direct Welcome session navigation returns to the briefing.
-Generic session/submission drafts from the prior milestone remain preserved
-outside Phase 1 commits for later review.
+Phase 2 adds a digest-pinned static Welcome image and worker-only runtime
+injection for the exact Welcome ID. The API verifier remains unchanged until
+Phase 3. The live session owns no runtime credentials: it sends validated BFF
+commands, revalidates remembered IDs as the current owner and reveals a URL only
+while running with time remaining. Account changes cancel stale operations and
+remount the session. Lost responses reuse mutation keys; storage failures retain
+same-tab control. The real local acceptance used a separate isolated target VM,
+two configured node slots and distinct learner/target cookie hostnames.
+Future submission drafts remain preserved outside Phase 2 commits.
 The delivery keeps preview as the default and adds no backend API shapes. Planned frontend
 `/api/profile` and `/api/leaderboard` reads forward existing generated DTOs,
 validate responses and retain the preview-first 404 gate. Live errors never

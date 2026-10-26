@@ -38,11 +38,13 @@ The user replaced the earlier Cookie Monster proposal with a harmless static
 Welcome page. Its seeded stable identity is
 `88888888-8888-4888-8888-888888888888`, slug `welcome`, with 10 points once.
 It openly displays `FLAG{WELCOME_TO_CISCO_FAMILY}`; no vulnerability, bypass or
-attack payload is part of the test. Backend sources are planned under
-`challenges/welcome/`, but no implementation exists yet. The replacement
-contract diff was approved October 26. Phase 1 now implements validated local
-test configuration and opt-in catalog metadata; target runtime and fixed-flag
-injection/verification remain later phases. See `PLAN.md` for acceptance evidence.
+attack payload is part of the test. Backend runtime sources live under
+`challenges/welcome/` in the backend. Phase 2 adds the harmless handler, health
+check, pinned Dockerfile, benign readiness checker and trusted manifest generator.
+The replacement contract diff was approved October 26. Phase 1 implements local
+test configuration and opt-in catalog metadata; Phase 2 injects the configured
+placeholder through the worker for Welcome's exact ID. Submission verification
+remains Phase 3. See `PLAN.md` for actual acceptance evidence.
 
 Use a flag-free health endpoint and relative page navigation; no target cookies
 or accounts are needed. The proposed local-only fixed-flag policy is controlled

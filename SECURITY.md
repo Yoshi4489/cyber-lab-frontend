@@ -7,6 +7,13 @@ happens next, and the goal is that the answer is always "nothing interesting."
 Read this before Phase 2 and implement it during Phase 3. The platform must not
 accept public signups until every control marked **required** is in place.
 
+The approved local Welcome milestone uses harmless placeholder content. Its
+target page intentionally displays a public runtime-injected value; it contains
+no vulnerability or exploit. This narrow development/test exception is specified
+in the sibling backend's `docs/API.md`; it does not change the production flag
+model or authorize returning expected flags from control-plane APIs. All public
+launch requirements below remain open until supported by production evidence.
+
 ## Threats, in rough order of how much they should worry you
 
 ### 1. Container escape

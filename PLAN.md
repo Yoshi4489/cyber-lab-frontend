@@ -1,6 +1,6 @@
 # Development Plan: CiscoKU Lab
 
-## Harmless Welcome lab: Phase 1 complete (October 26, 2026)
+## Harmless Welcome lab: Phase 2 runtime verified (October 26, 2026)
 
 The user replaced the Cookie Monster milestone with harmless end-to-end testing.
 Confirmed choices: the exact shared `FLAG{WELCOME_TO_CISCO_FAMILY}`, local
@@ -11,7 +11,7 @@ outside scope.
 
 The approved replacement contract is in `../cyber-range-backend/docs/API.md`,
 under "Approved replacement delivery: harmless Welcome lab". **The user approved
-the actual documentation diff on October 26; Phase 1 is authorized.** This
+the actual documentation diff on October 26, then Phases 1 and 2.** This
 supersedes the earlier Cookie Monster delivery approval.
 Preview stays the server default; actual tests explicitly select live mode.
 
@@ -30,8 +30,8 @@ coordination. No new dependencies or independent agent contract edits. Preserve
 the unrelated hosting-history edit below and the existing uncommitted frontend
 work. Generic auth/lifecycle/submission changes can be reviewed for reuse;
 Cookie Monster-specific content is excluded from Welcome acceptance. The prior
-generic session/submission drafts remain outside this phase's commits. No
-Welcome target was written; launch and submission remain unavailable.
+future submission drafts remain outside this phase's commits. Phase 1 did not
+include a target; Phase 2 below enables launch while submission stays unavailable.
 Earlier delivery evidence remains historical; production launch gates stay open.
 Source commits are `f4ca8ce` (real live learner identity) and `dd942c0`
 (harmless Welcome briefing and dedicated fixtures); no push was made.
@@ -79,6 +79,67 @@ session navigation and logout. Keep the worker/VM off for this checkpoint.
 There are no unresolved Phase 1 questions. **Pause for approval of Phase 2:
 actual harmless target spawning/running on the isolated VM.** Scoring and live
 progress remain Phase 3; no hosted deployment or production acceptance is claimed.
+
+The user approved Phase 2 after the report above. It implements live
+spawn/preparation/running/stop controls, readiness-only links, refresh-preserved
+absolute expiry and bounded extension. Account changes discard stale requests;
+owner validation precedes showing restored instances. Lost responses reuse
+idempotency keys and storage denial keeps same-tab control. The static Welcome
+target lives in the sibling backend, runs nonroot with a read-only filesystem,
+and receives its public placeholder at runtime. API shapes are unchanged.
+
+Phase 2 verification passed lint, types, production build, BFF smoke, 125 unit
+tests (121 current-scope cases plus four preserved future-draft cases), and
+108 explicit-live browser cases across desktop/mobile/tablet with zero skips or
+flaky cases. All 57 preview cases passed before the final live-only copy fix;
+the final build's preview isolation gate passed 30 visits, 28 API 404s, two
+operator 404s, zero upstream/browser API/external calls or page errors and no
+live-cookie changes. Generated types match all 20 backend paths. A read-only
+TypeScript check passed 163 root files while excluding all future submission
+drafts and using the committed stylesheet, proving no dependency on that work.
+Backend gates passed all 247 tests without skips. One clock-test setup issue
+was corrected before the clean 108-case run; application deadlines were not
+relaxed. Final lint/types and one focused mobile browser confirmation also pass.
+
+Real acceptance connected the built frontend to a fresh database, compiled API,
+worker and the retained private-only Linux target VM after fresh mTLS/preflight
+checks. Creation returned pending without a URL; three concurrent same-key
+retries reused one instance/operation. Pending and running refresh kept the
+60-minute initial expiry and two-hour absolute cap. Exactly one managed target,
+network and route existed on the two-slot node. The target displayed the exact
+public placeholder; its health response contained no flag and no learner cookie
+reached it. Runtime limits and absence of a baked image flag were checked.
+Stopping removed the resources and returned route 404. No submission, scoring,
+email, later-phase call or unexpected outbound browser request occurred.
+An initial acceptance helper used the wrong TLS server name; only that ignored
+helper was corrected before a fresh, successful run. This was not an app fix.
+
+The combined visual pass covered 33 captures: entry/session states across three
+viewports and both themes, plus the actual target in three viewports. One mobile
+dark-link capture raced theme painting; theme/foreground synchronization in the
+test and the single confirmation pass showed a readable link without CSS changes.
+Evidence is retained under the task artifact folder's `welcome-phase2-qa`,
+including `live-browser-report.json` and `real-spawn-browser.json`.
+
+To repeat, use the sibling `docs/LOCAL_DEVELOPMENT.md` Welcome runtime setup with
+disposable accounts/services and a fresh isolated-node preflight. Select explicit
+live frontend mode; sign in, open Welcome, Spawn Instance, refresh pending and
+running, open the assigned page, extend and stop. Verify route/resource absence.
+Submission, scoring and live progress are Phase 3. There are no open product
+questions. **Pause for approval before Phase 3.** No hosted deployment or
+production-readiness claim is made.
+
+Final cleanup: the target, network and route, acceptance database/role, API,
+worker, frontend, private runtime files and tunnel were removed/stopped. The
+retained target VM is confirmed powered off. The shared test PostgreSQL process
+was already stopped; its verified owned cluster/state were removed after PID
+and closed-port checks. Redis' loopback port is closed, but Docker Desktop is
+not responding to inventory requests after restart; its retained owned-container
+state is preserved until inventory/removal can be confirmed. Windows is locked,
+so UI inspection stopped and the user was asked to unlock it. This final cleanup
+check remains open; Phase 3 has not started.
+Frontend source is split into `0e76aa2` (session safeguards) and `83ba5ce`
+(Welcome launch and browser fixtures). No push was made.
 
 ## Mock preview and lifecycle hardening delivery (October 23, 2026)
 
