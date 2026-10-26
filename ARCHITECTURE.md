@@ -18,21 +18,27 @@ hosted acceptance, runtime isolation, or production launch readiness.
 
 **The mock-preview contract was approved on 2026-10-23. All four local delivery
 phases are complete; replacement-VM fixture acceptance passed on 2026-10-26.
-Production gates remain open. The first playable CTF contract extension was
-approved on 2026-10-26; its Phase 1 implementation is in progress.**
+Production gates remain open. The user replaced the Cookie Monster milestone
+with harmless Welcome testing; its replacement contract diff was approved on
+2026-10-26 and Phase 1 is in progress.**
 The approved specification is in the backend's [API contract](../cyber-range-backend/docs/API.md).
 It supersedes the older frontend-only assumptions about Better Auth, database
 ownership, lifecycle states, quotas, routing, flag storage, and missing backend
 implementation. `PLAN.md` retains historical delivery evidence, not a second API
 contract.
 
-The approved playable milestone uses Cookie Monster as one authored backend
-target, real BFF login/lifecycle/submissions, then persisted dashboard/Profile
-and public database rankings. The implementation is not yet present. It keeps
-preview as the default and adds no backend API shapes. Planned frontend
+The approved replacement milestone uses a static Welcome target, real BFF
+login/lifecycle/submissions and persisted dashboard/Profile/database rankings.
+Welcome displays `FLAG{WELCOME_TO_CISCO_FAMILY}` and awards 10 points once.
+It contains no vulnerability or exploit. A server-controlled development/test
+exception applies only to Welcome; all other labs retain dynamic flags, and
+production rejects the Welcome test settings. Ownership and expiry checks are
+unchanged. No Welcome backend is implemented. Generic uncommitted frontend work
+from the prior milestone is preserved for review; its verification is incomplete.
+The delivery keeps preview as the default and adds no backend API shapes. Planned frontend
 `/api/profile` and `/api/leaderboard` reads forward existing generated DTOs,
 validate responses and retain the preview-first 404 gate. Live errors never
-fall back to demo identity or scores. The three approval checkpoints are in
+fall back to demo identity or scores. The six approval checkpoints are in
 `PLAN.md` and the backend contract. Local browser acceptance requires different
 cookie hostnames for learner and target; different ports are insufficient.
 Actual catalog/runtime schemas live in the backend. The frontend's YAML-only
@@ -179,8 +185,10 @@ is `LAB_PUBLIC_BASE_URL` plus `/labs/<unguessable-route-key>/`; current routing
 uses Traefik file-provider documents, not per-instance subdomain labels.
 Production route delivery uses the worker's authenticated Docker channel.
 
-Flags are HMAC-derived per user, challenge, and instance and injected only at
-runtime. Expected and submitted flag values are never persisted or logged.
+Implemented flags are HMAC-derived per user, challenge, and instance and injected
+only at runtime. The proposed Welcome-only local test exception is specified in
+the backend contract; it is not yet implemented. Expected and submitted flag
+values are never persisted or logged.
 Scoring transactions award fixed challenge points once per user/challenge.
 Decaying scores, hints, global first-blood recognition, and flag-sharing review
 are future work. Real submissions require an owned running, unexpired instance.

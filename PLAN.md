@@ -1,31 +1,37 @@
 # Development Plan: CiscoKU Lab
 
-## First playable CTF: Phase 1 in progress (October 26, 2026)
+## Harmless Welcome lab: Phase 1 in progress (October 26, 2026)
 
-The user authorized beginning a playable web CTF connected to real learners.
-The lead reviewed existing code: real auth/catalog/lifecycle and submission BFF
-exist, but the session has no flag form; live dashboard/rankings still use demo
-components and Profile is a placeholder. Cookie Monster has only a YAML sketch;
-the backend catalog currently publishes six fixtures. No authored target exists.
+The user replaced the Cookie Monster milestone with harmless end-to-end testing.
+Confirmed choices: the exact shared `FLAG{WELCOME_TO_CISCO_FAMILY}`, local
+Windows control plane plus the retained isolated Linux VM, and 10 points once.
+Welcome openly displays the flag; it contains no vulnerability, exploit, attack
+payload or sensitive security content. Public signup and hosted changes remain
+outside scope.
 
-The approved delivery contract is in
-`../cyber-range-backend/docs/API.md`, under "Approved delivery: first playable
-web CTF". **The user approved the documentation diff on October 26; Phase 1 is
-authorized.** Default preview remains isolated. Real play targets local,
-operator-created verified accounts and the retained disposable VM, with separate
-cookie hostnames for learner and target. No hosted changes are authorized here.
+The approved replacement contract is in `../cyber-range-backend/docs/API.md`,
+under "Approved replacement delivery: harmless Welcome lab". **The user approved
+the actual documentation diff on October 26; Phase 1 is authorized.** This
+supersedes the earlier Cookie Monster delivery approval.
+Preview stays the server default; actual tests explicitly select live mode.
 
 | Checkpoint | Frontend agent: this repo only | Backend agent: sibling only |
 |---|---|---|
-| 1 — Playable slice | Real learner identity throughout live entry/navigation; Cookie Monster briefing/hints; running-instance flag form and correct/incorrect/repeat/error outcomes; hide unfinished live progress rather than show demo totals | Authored Cookie Monster app, pinned image, safe automated solve/writeup; unique catalog entry; unpublish fixture catalog on explicit disposable reseed; verify runtime contract |
-| 2 — Persisted learner views | Validated preview-gated profile/leaderboard BFF reads; live dashboard/Profile/rankings; refresh and account-change safeguards | Verify existing scoring/progress/privacy against the authored challenge |
-| 3 — Real browser acceptance | Required application gates and real login-to-solve browser journey; preview isolation; combined viewport/theme/keyboard review | Fresh disposable services, isolated VM/preflight, two-user flag/ownership checks, expiry/cleanup and final absence evidence |
+| 1 — Accounts and catalog | Real login/identity, refresh/logout, Welcome listing/briefing; honest unfinished live views | Development/test-only Welcome configuration and explicit disposable catalog seed; two verified learners |
+| 2 — Spawn and running | Spawn Instance, pending/running states, target link, refresh-preserved lifetime | Harmless runtime-injected Welcome page, pinned image/manifest, isolated VM/preflight, idempotent creation |
+| 3 — Submission and persistence | Correct/incorrect/repeat outcomes; validated profile/leaderboard BFF and live progress | Welcome-only fixed-flag policy, owner/expiry enforcement, once-only 10-point scoring and persisted history |
+| 4 — Two-user isolation | Independent browser sessions and foreign-resource denial | Distinct resources, benign controlled health requests, stop A while B remains usable |
+| 5 — Expiry and cleanup | Expiry/stop/retry states and inactive submission denial | Actual removal, route 404, capacity refusal/retention and controlled cleanup retry |
+| 6 — Regression and replacement readiness | Full harmless browser flow, preview isolation, responsive/theme/keyboard checks | Disposable-service gates, final absence evidence and future dynamic-flag compatibility |
 
 Report changes, test instructions/results and open questions after each numbered
 checkpoint; update canonical docs and pause for approval. The lead owns contract
 coordination. No new dependencies or independent agent contract edits. Preserve
-the existing unrelated hosting-history edit below. The earlier four-phase scope
-and evidence below remain historical; production launch gates stay open.
+the unrelated hosting-history edit below and the existing uncommitted frontend
+work. Generic auth/lifecycle/submission changes can be reviewed for reuse;
+Cookie Monster-specific content is excluded from Welcome acceptance. The prior
+frontend changes are not yet fully verified, and no backend target was written.
+Earlier delivery evidence remains historical; production launch gates stay open.
 
 ## Mock preview and lifecycle hardening delivery (October 23, 2026)
 
