@@ -16,14 +16,27 @@ Learning Paths remains a placeholder. Explicit live mode retains the existing re
 catalog, and lab controls through server-only adapters. Neither mode establishes
 hosted acceptance, runtime isolation, or production launch readiness.
 
-**The contract diff was approved on 2026-10-23. Phases 1 through 3 are implemented;
-Phase 4 verification was approved on 2026-10-25. Application checks passed;
-real-target acceptance remains open pending the replacement test VM.**
+**The mock-preview contract was approved on 2026-10-23. All four local delivery
+phases are complete; replacement-VM fixture acceptance passed on 2026-10-26.
+Production gates remain open. The first playable CTF contract extension was
+approved on 2026-10-26; its Phase 1 implementation is in progress.**
 The approved specification is in the backend's [API contract](../cyber-range-backend/docs/API.md).
 It supersedes the older frontend-only assumptions about Better Auth, database
 ownership, lifecycle states, quotas, routing, flag storage, and missing backend
 implementation. `PLAN.md` retains historical delivery evidence, not a second API
 contract.
+
+The approved playable milestone uses Cookie Monster as one authored backend
+target, real BFF login/lifecycle/submissions, then persisted dashboard/Profile
+and public database rankings. The implementation is not yet present. It keeps
+preview as the default and adds no backend API shapes. Planned frontend
+`/api/profile` and `/api/leaderboard` reads forward existing generated DTOs,
+validate responses and retain the preview-first 404 gate. Live errors never
+fall back to demo identity or scores. The three approval checkpoints are in
+`PLAN.md` and the backend contract. Local browser acceptance requires different
+cookie hostnames for learner and target; different ports are insufficient.
+Actual catalog/runtime schemas live in the backend. The frontend's YAML-only
+Cookie Monster sketch and old authoring layout are not executable manifests.
 
 ## Preview and live boundaries
 
@@ -125,10 +138,10 @@ schemas or sibling source imports are not the source of truth. The 2026-10-23
 review confirmed those generated types match the local backend's 20-path
 contract. Any additional contract change requires user approval.
 
-Phase 1 backend changes enforce verified email at creation and reject nonempty
+Backend changes enforce verified email at creation and reject nonempty
 extend/delete bodies. Node capacity admission and orphan inventory cleanup
-remain pending in Phases 2 and 3. API details and errors are specified in the
-backend API contract.
+are also implemented and passed local disposable acceptance. API details and
+errors are specified in the backend API contract.
 
 ## Backend lifecycle and target trust zones
 

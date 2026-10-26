@@ -1,5 +1,32 @@
 # Development Plan: CiscoKU Lab
 
+## First playable CTF: Phase 1 in progress (October 26, 2026)
+
+The user authorized beginning a playable web CTF connected to real learners.
+The lead reviewed existing code: real auth/catalog/lifecycle and submission BFF
+exist, but the session has no flag form; live dashboard/rankings still use demo
+components and Profile is a placeholder. Cookie Monster has only a YAML sketch;
+the backend catalog currently publishes six fixtures. No authored target exists.
+
+The approved delivery contract is in
+`../cyber-range-backend/docs/API.md`, under "Approved delivery: first playable
+web CTF". **The user approved the documentation diff on October 26; Phase 1 is
+authorized.** Default preview remains isolated. Real play targets local,
+operator-created verified accounts and the retained disposable VM, with separate
+cookie hostnames for learner and target. No hosted changes are authorized here.
+
+| Checkpoint | Frontend agent: this repo only | Backend agent: sibling only |
+|---|---|---|
+| 1 — Playable slice | Real learner identity throughout live entry/navigation; Cookie Monster briefing/hints; running-instance flag form and correct/incorrect/repeat/error outcomes; hide unfinished live progress rather than show demo totals | Authored Cookie Monster app, pinned image, safe automated solve/writeup; unique catalog entry; unpublish fixture catalog on explicit disposable reseed; verify runtime contract |
+| 2 — Persisted learner views | Validated preview-gated profile/leaderboard BFF reads; live dashboard/Profile/rankings; refresh and account-change safeguards | Verify existing scoring/progress/privacy against the authored challenge |
+| 3 — Real browser acceptance | Required application gates and real login-to-solve browser journey; preview isolation; combined viewport/theme/keyboard review | Fresh disposable services, isolated VM/preflight, two-user flag/ownership checks, expiry/cleanup and final absence evidence |
+
+Report changes, test instructions/results and open questions after each numbered
+checkpoint; update canonical docs and pause for approval. The lead owns contract
+coordination. No new dependencies or independent agent contract edits. Preserve
+the existing unrelated hosting-history edit below. The earlier four-phase scope
+and evidence below remain historical; production launch gates stay open.
+
 ## Mock preview and lifecycle hardening delivery (October 23, 2026)
 
 The user approved a new delivery direction: make the entire learner preview
