@@ -29,6 +29,8 @@ import { POST as create } from "../../src/app/api/instances/route";
 import { GET as get, DELETE as destroy } from "../../src/app/api/instances/[id]/route";
 import { POST as extend } from "../../src/app/api/instances/[id]/extend/route";
 import { POST as submit } from "../../src/app/api/submissions/route";
+import { GET as profile } from "../../src/app/api/profile/route";
+import { GET as leaderboard } from "../../src/app/api/leaderboard/route";
 
 afterEach(() => { vi.unstubAllEnvs(); vi.restoreAllMocks(); vi.clearAllMocks(); });
 
@@ -50,6 +52,7 @@ describe("deployment-owned preview boundary", () => {
       catalog(), status(), login(request), logout(request), session(),
       verificationRequest(request), verificationConfirm(request), resetRequest(request), resetConfirm(request),
       create(request), get(request, context), destroy(request, context), extend(request, context), submit(request),
+      profile(), leaderboard(),
     ]);
     for (const response of responses) {
       expect(response.status).toBe(404);

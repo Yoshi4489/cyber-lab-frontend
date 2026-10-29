@@ -1,5 +1,5 @@
 import "server-only";
-import { isInvalidBackendSession } from "./bff-response";
+import { backendBffError, bffError, isInvalidBackendSession } from "./bff-response";
 import { resolveBackendSession } from "./auth-adapter";
 import {
   clearBackendSessionCookie,
@@ -50,4 +50,11 @@ export async function issueBffServiceToken(
     throw new BffUnauthorizedScopeError();
   }
   return issueBackendServiceToken(session, scope);
+}
+
+/** Maps a scoped read's authorization failures to the BFF `{ code }` envelope. */
+export function authorizedReadBffError(error: unknown): Response {
+  if (error instanceof BffUnauthorizedScopeError) return bffError(403, "FORBIDDEN");
+  if (error instanceof BffUnauthenticatedError) return bffError(401, "UNAUTHORIZED");
+  return backendBffError(error);
 }
