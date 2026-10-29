@@ -16,6 +16,7 @@ const challenge = {
   kind: "web",
   tags: ["http", "intro"],
 };
+const welcomeFlag = "FLAG{WELCOME_TO_CISCO_FAMILY}";
 const welcomeChallenge = { ...challenge, id: "88888888-8888-4888-8888-888888888888", slug: "welcome", title: "Welcome", summary: "A harmless introduction to your learning workspace.", points: 10, tags: ["introduction", "getting-started"] };
 
 /**
@@ -44,6 +45,7 @@ export function createBackendFixture({
   const welcomeSessions = new Map();
   const welcomeInstances = new Map();
   const welcomeMutations = new Map();
+  const welcomeSolves = new Map();
   const acceptedMutations = new Map();
   const requests = [];
   const server = createServer(async (request, response) => {
@@ -54,6 +56,7 @@ export function createBackendFixture({
       welcomeSessions.clear();
       welcomeInstances.clear();
       welcomeMutations.clear();
+      welcomeSolves.clear();
       acceptedMutations.clear();
       response.writeHead(204).end();
       return;
@@ -251,6 +254,32 @@ export function createBackendFixture({
       }
     }
 
+    if (scenario.startsWith("welcome") && (requestUrl === "/v1/submissions" || requestUrl === "/v1/profile")) {
+      const submission = request.method === "POST" && requestUrl === "/v1/submissions";
+      const actor = await serviceActor(request, submission ? "submissions:write" : "profile:read", serviceToken, serviceTokenConfig, [...welcomeSessions.values()]);
+      if (!actor) { sendJson(response, 401, { code: "UNAUTHORIZED", correlationId }); return; }
+      if (submission) {
+        let input;
+        try { input = JSON.parse(body); } catch { input = null; }
+        const owned = welcomeInstances.get(input?.instanceId);
+        // Mirrors the backend: owner, challenge match, running and unexpired.
+        if (!owned || owned.owner !== actor || owned.instance.challengeId !== input?.challengeId || owned.instance.status !== "running" || Date.parse(owned.instance.expiresAt) <= Date.now()) {
+          sendJson(response, 404, { code: "NOT_FOUND", correlationId }); return;
+        }
+        const correct = typeof input.flag === "string" && input.flag.trim() === welcomeFlag;
+        const first = correct && !welcomeSolves.has(actor);
+        if (first) welcomeSolves.set(actor, new Date().toISOString());
+        sendJson(response, 200, { correct, points: first ? welcomeChallenge.points : 0, recorded: true, source: "database" }); return;
+      }
+      const session = [...welcomeSessions.values()].find(value => value.user.id === actor);
+      const solvedAt = welcomeSolves.get(actor);
+      sendJson(response, 200, {
+        userId: actor, displayName: session.user.displayName, bio: null,
+        totalPoints: solvedAt ? welcomeChallenge.points : 0, solvedCount: solvedAt ? 1 : 0, availableChallenges: 1,
+        solves: solvedAt ? [{ challengeId: welcomeChallenge.id, slug: welcomeChallenge.slug, title: welcomeChallenge.title, points: welcomeChallenge.points, solvedAt }] : [],
+      }); return;
+    }
+
     if (request.method === "POST" && requestUrl === "/v1/submissions") {
       if (
         !(await hasServiceToken(
@@ -300,6 +329,14 @@ export function createBackendFixture({
       }
       return;
     }
+    if (requestUrl === "/v1/leaderboard" && scenario.startsWith("welcome")) {
+      const sessions = [...welcomeSessions.values()];
+      const entries = [...welcomeSolves.entries()].sort((a, b) => a[1].localeCompare(b[1])).map(([id, solvedAt], index) => ({
+        rank: index + 1, displayName: sessions.find(value => value.user.id === id)?.user.displayName ?? "Learner",
+        totalPoints: welcomeChallenge.points, solvedCount: 1, lastSolvedAt: solvedAt,
+      }));
+      sendJson(response, 200, { entries, source: "database" }); return;
+    }
     if (requestUrl === "/v1/leaderboard") {
       sendJson(response, 200, {
         entries: [
@@ -340,7 +377,7 @@ const resolvedSession = {
     role: "player",
     emailVerified: true,
   },
-  allowedScopes: ["instances:read", "instances:write", "submissions:write"],
+  allowedScopes: ["instances:read", "instances:write", "submissions:write", "profile:read"],
   idleExpiresAt: "2026-09-22T00:30:00.000Z",
   absoluteExpiresAt: "2026-12-22T00:00:00.000Z",
 };

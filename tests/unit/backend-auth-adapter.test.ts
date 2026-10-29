@@ -53,7 +53,7 @@ describe("backend BFF authentication adapter", () => {
     expect(session).toMatchObject({
       sessionId: "943eced9-5a8e-4160-80c5-ef9021aab53f",
       user: { id: "d7c932ea-e0ad-41bb-99e3-b4f9d0971e28", role: "player" },
-      allowedScopes: ["instances:read", "instances:write", "submissions:write"],
+      allowedScopes: ["instances:read", "instances:write", "submissions:write", "profile:read"],
     });
 
     const requests = fixture.requests().slice(-3);

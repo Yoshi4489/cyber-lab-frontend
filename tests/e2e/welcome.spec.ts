@@ -19,7 +19,10 @@ test.afterEach(async ({ request }) => { await request.post(`${fixtureOrigin}/sce
 
 test("Welcome account and catalog journey is harmless and leads to its live session", async ({ page, isMobile }, info) => {
   const laterCalls: string[] = [];
-  page.on("request", request => { if (/\/api\/(submissions|profile|leaderboard)/.test(request.url())) laterCalls.push(request.url()); });
+  page.on("request", request => {
+    // Live home reads persisted totals; this journey never submits a flag.
+    if (/\/api\/submissions/.test(request.url()) || (/\/api\/profile/.test(request.url()) && request.method() !== "GET")) laterCalls.push(request.url());
+  });
   await page.emulateMedia({ colorScheme: "light", reducedMotion: "reduce" });
   await page.goto("/signup?next=%2Fdashboard");
   await expect(page.getByText("Public registration is currently closed.")).toBeVisible();

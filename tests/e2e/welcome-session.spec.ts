@@ -221,3 +221,67 @@ test("restoration rejects mismatched owner-read payloads and expired links disap
   await expect(page.getByTestId("lab-target")).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Extend 30 minutes" })).toBeDisabled();
 });
+
+test("Welcome scores the shown flag once and live progress reflects it", async ({ page, isMobile }) => {
+  const flag = "FLAG{WELCOME_TO_CISCO_FAMILY}";
+  const submissions: string[] = [];
+  page.on("request", request => { if (request.url().endsWith("/api/submissions")) submissions.push(request.method()); });
+  await login(page);
+  await expect(page.getByLabel("Flag", { exact: true })).toHaveCount(0);
+  await start(page);
+  const field = page.getByLabel("Flag", { exact: true });
+  const submit = page.getByRole("button", { name: "Submit flag", exact: true });
+  await expect(submit).toBeDisabled();
+
+  await field.fill(flag.toLowerCase());
+  await submit.click();
+  await expect(page.getByTestId("flag-result")).toHaveText("That flag is not correct. Check it and try again.");
+  await expect(field).toHaveValue(flag.toLowerCase());
+
+  await field.fill(`  ${flag} `);
+  await field.press("Enter");
+  await expect(page.getByTestId("flag-result")).toHaveText("Correct! You earned 10 points.");
+  await expect(field).toHaveValue("");
+
+  await field.fill(flag);
+  await submit.click();
+  await expect(page.getByTestId("flag-result")).toHaveText("Correct. You have already solved this lab, so no extra points were added.");
+  expect(submissions).toEqual(["POST", "POST", "POST"]);
+  expect(page.url()).not.toContain("FLAG");
+  const stored = await page.evaluate(() => JSON.stringify({ ...localStorage }) + JSON.stringify({ ...sessionStorage }));
+  expect(stored).not.toContain("FLAG{");
+  await expect(page.getByTestId("lab-status")).toHaveText("running");
+
+  await page.goto("/profile");
+  await expect(page.getByTestId("profile-points")).toHaveText("10");
+  await expect(page.getByRole("table").getByRole("row").nth(1)).toContainText("Welcome");
+  await page.goto("/leaderboard");
+  await expect(page.getByRole("table").getByRole("row")).toHaveCount(2);
+  await expect(page.getByRole("table").getByRole("row").nth(1)).toContainText("Loopback Learner");
+  await page.goto("/");
+  await expect(page.getByTestId("home-progress")).toContainText("10 points");
+
+  await page.goto("/labs/welcome/session");
+  await page.getByLabel("Flag", { exact: true }).fill("typed but not sent");
+  if (isMobile) await page.getByRole("button", { name: "Open navigation" }).click();
+  await page.getByRole("button", { name: "Sign out", exact: true }).click();
+  await expect(page).toHaveURL(/\/$/);
+  await login(page, "learner-b@example.test");
+  await expect(page.getByLabel("Flag", { exact: true })).toHaveCount(0);
+  await page.goto("/profile");
+  await expect(page.getByTestId("profile-points")).toHaveText("0");
+  await expect(page.getByText("No solves yet.")).toBeVisible();
+});
+
+test("an unknown submission outcome is not retried and points to persisted progress", async ({ page }) => {
+  let attempts = 0;
+  await login(page);
+  await start(page);
+  await page.route("**/api/submissions", async route => { attempts += 1; await route.abort("connectionreset"); });
+  await page.getByLabel("Flag", { exact: true }).fill("FLAG{WELCOME_TO_CISCO_FAMILY}");
+  await page.getByRole("button", { name: "Submit flag", exact: true }).click();
+  await expect(page.getByRole("main").getByRole("alert")).toContainText("We could not confirm this attempt.");
+  await expect(page.getByRole("link", { name: "Check your progress" })).toHaveAttribute("href", "/profile");
+  await page.waitForTimeout(500);
+  expect(attempts).toBe(1);
+});
