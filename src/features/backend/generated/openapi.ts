@@ -221,6 +221,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/challenges/{slug}/content": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Public briefing. Hint bodies and walkthroughs are never included. */
+        get: operations["getChallengeContent"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/challenges/{slug}/hints/{position}/unlock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Requires submissions:write. Safe to retry; charges the hint cost once. */
+        post: operations["unlockChallengeHint"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/challenges/{slug}/state": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Requires profile:read. Returns only what this player has unlocked. */
+        get: operations["getPlayerChallengeState"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/challenges/{slug}/walkthrough/unlock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Requires submissions:write. Before a solve this forfeits the points. */
+        post: operations["unlockChallengeWalkthrough"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/instances": {
         parameters: {
             query?: never;
@@ -2378,6 +2446,681 @@ export interface operations {
                         summary: string;
                         readonly tags: string[];
                         title: string;
+                    };
+                };
+            };
+            /** @description Default Response */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "INVALID_REQUEST" | "RATE_LIMITED" | "NOT_IMPLEMENTED" | "INTERNAL_ERROR";
+                        /** Format: uuid */
+                        correlationId: string;
+                        message: string;
+                    };
+                };
+            };
+            /** @description Default Response */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "INVALID_REQUEST" | "RATE_LIMITED" | "NOT_IMPLEMENTED" | "INTERNAL_ERROR";
+                        /** Format: uuid */
+                        correlationId: string;
+                        message: string;
+                    };
+                };
+            };
+            /** @description Default Response */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "INVALID_REQUEST" | "RATE_LIMITED" | "NOT_IMPLEMENTED" | "INTERNAL_ERROR";
+                        /** Format: uuid */
+                        correlationId: string;
+                        message: string;
+                    };
+                };
+            };
+            /** @description Default Response */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "INVALID_REQUEST" | "RATE_LIMITED" | "NOT_IMPLEMENTED" | "INTERNAL_ERROR";
+                        /** Format: uuid */
+                        correlationId: string;
+                        message: string;
+                    };
+                };
+            };
+            /** @description Default Response */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "INVALID_REQUEST" | "RATE_LIMITED" | "NOT_IMPLEMENTED" | "INTERNAL_ERROR";
+                        /** Format: uuid */
+                        correlationId: string;
+                        message: string;
+                    };
+                };
+            };
+            /** @description Default Response */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "INVALID_REQUEST" | "RATE_LIMITED" | "NOT_IMPLEMENTED" | "INTERNAL_ERROR";
+                        /** Format: uuid */
+                        correlationId: string;
+                        message: string;
+                    };
+                };
+            };
+            /** @description Default Response */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "INVALID_REQUEST" | "RATE_LIMITED" | "NOT_IMPLEMENTED" | "INTERNAL_ERROR";
+                        /** Format: uuid */
+                        correlationId: string;
+                        message: string;
+                    };
+                };
+            };
+            /** @description Default Response */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "INVALID_REQUEST" | "RATE_LIMITED" | "NOT_IMPLEMENTED" | "INTERNAL_ERROR";
+                        /** Format: uuid */
+                        correlationId: string;
+                        message: string;
+                    };
+                };
+            };
+            /** @description Default Response */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "INVALID_REQUEST" | "RATE_LIMITED" | "NOT_IMPLEMENTED" | "INTERNAL_ERROR";
+                        /** Format: uuid */
+                        correlationId: string;
+                        message: string;
+                    };
+                };
+            };
+        };
+    };
+    getChallengeContent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        briefingMd: string;
+                        hasWalkthrough: boolean;
+                        hints: {
+                            cost: number;
+                            position: number;
+                        }[];
+                        learningOutcomes: string[];
+                        objectives: string[];
+                        references: {
+                            label: string;
+                            url?: string;
+                        }[];
+                    };
+                };
+            };
+            /** @description Default Response */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "INVALID_REQUEST" | "RATE_LIMITED" | "NOT_IMPLEMENTED" | "INTERNAL_ERROR";
+                        /** Format: uuid */
+                        correlationId: string;
+                        message: string;
+                    };
+                };
+            };
+            /** @description Default Response */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "INVALID_REQUEST" | "RATE_LIMITED" | "NOT_IMPLEMENTED" | "INTERNAL_ERROR";
+                        /** Format: uuid */
+                        correlationId: string;
+                        message: string;
+                    };
+                };
+            };
+            /** @description Default Response */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "INVALID_REQUEST" | "RATE_LIMITED" | "NOT_IMPLEMENTED" | "INTERNAL_ERROR";
+                        /** Format: uuid */
+                        correlationId: string;
+                        message: string;
+                    };
+                };
+            };
+            /** @description Default Response */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "INVALID_REQUEST" | "RATE_LIMITED" | "NOT_IMPLEMENTED" | "INTERNAL_ERROR";
+                        /** Format: uuid */
+                        correlationId: string;
+                        message: string;
+                    };
+                };
+            };
+            /** @description Default Response */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "INVALID_REQUEST" | "RATE_LIMITED" | "NOT_IMPLEMENTED" | "INTERNAL_ERROR";
+                        /** Format: uuid */
+                        correlationId: string;
+                        message: string;
+                    };
+                };
+            };
+            /** @description Default Response */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "INVALID_REQUEST" | "RATE_LIMITED" | "NOT_IMPLEMENTED" | "INTERNAL_ERROR";
+                        /** Format: uuid */
+                        correlationId: string;
+                        message: string;
+                    };
+                };
+            };
+            /** @description Default Response */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "INVALID_REQUEST" | "RATE_LIMITED" | "NOT_IMPLEMENTED" | "INTERNAL_ERROR";
+                        /** Format: uuid */
+                        correlationId: string;
+                        message: string;
+                    };
+                };
+            };
+            /** @description Default Response */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "INVALID_REQUEST" | "RATE_LIMITED" | "NOT_IMPLEMENTED" | "INTERNAL_ERROR";
+                        /** Format: uuid */
+                        correlationId: string;
+                        message: string;
+                    };
+                };
+            };
+            /** @description Default Response */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "INVALID_REQUEST" | "RATE_LIMITED" | "NOT_IMPLEMENTED" | "INTERNAL_ERROR";
+                        /** Format: uuid */
+                        correlationId: string;
+                        message: string;
+                    };
+                };
+            };
+        };
+    };
+    unlockChallengeHint: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                position: number;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        costApplied: number;
+                        forfeited: boolean;
+                        pointsAwarded: number | null;
+                        solved: boolean;
+                        unlockedHints: {
+                            bodyMd: string;
+                            costApplied: number;
+                            position: number;
+                        }[];
+                        walkthroughMd: string | null;
+                    };
+                };
+            };
+            /** @description Default Response */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "INVALID_REQUEST" | "RATE_LIMITED" | "NOT_IMPLEMENTED" | "INTERNAL_ERROR";
+                        /** Format: uuid */
+                        correlationId: string;
+                        message: string;
+                    };
+                };
+            };
+            /** @description Default Response */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "INVALID_REQUEST" | "RATE_LIMITED" | "NOT_IMPLEMENTED" | "INTERNAL_ERROR";
+                        /** Format: uuid */
+                        correlationId: string;
+                        message: string;
+                    };
+                };
+            };
+            /** @description Default Response */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "INVALID_REQUEST" | "RATE_LIMITED" | "NOT_IMPLEMENTED" | "INTERNAL_ERROR";
+                        /** Format: uuid */
+                        correlationId: string;
+                        message: string;
+                    };
+                };
+            };
+            /** @description Default Response */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "INVALID_REQUEST" | "RATE_LIMITED" | "NOT_IMPLEMENTED" | "INTERNAL_ERROR";
+                        /** Format: uuid */
+                        correlationId: string;
+                        message: string;
+                    };
+                };
+            };
+            /** @description Default Response */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "INVALID_REQUEST" | "RATE_LIMITED" | "NOT_IMPLEMENTED" | "INTERNAL_ERROR";
+                        /** Format: uuid */
+                        correlationId: string;
+                        message: string;
+                    };
+                };
+            };
+            /** @description Default Response */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "INVALID_REQUEST" | "RATE_LIMITED" | "NOT_IMPLEMENTED" | "INTERNAL_ERROR";
+                        /** Format: uuid */
+                        correlationId: string;
+                        message: string;
+                    };
+                };
+            };
+            /** @description Default Response */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "INVALID_REQUEST" | "RATE_LIMITED" | "NOT_IMPLEMENTED" | "INTERNAL_ERROR";
+                        /** Format: uuid */
+                        correlationId: string;
+                        message: string;
+                    };
+                };
+            };
+            /** @description Default Response */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "INVALID_REQUEST" | "RATE_LIMITED" | "NOT_IMPLEMENTED" | "INTERNAL_ERROR";
+                        /** Format: uuid */
+                        correlationId: string;
+                        message: string;
+                    };
+                };
+            };
+            /** @description Default Response */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "INVALID_REQUEST" | "RATE_LIMITED" | "NOT_IMPLEMENTED" | "INTERNAL_ERROR";
+                        /** Format: uuid */
+                        correlationId: string;
+                        message: string;
+                    };
+                };
+            };
+        };
+    };
+    getPlayerChallengeState: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        costApplied: number;
+                        forfeited: boolean;
+                        pointsAwarded: number | null;
+                        solved: boolean;
+                        unlockedHints: {
+                            bodyMd: string;
+                            costApplied: number;
+                            position: number;
+                        }[];
+                        walkthroughMd: string | null;
+                    };
+                };
+            };
+            /** @description Default Response */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "INVALID_REQUEST" | "RATE_LIMITED" | "NOT_IMPLEMENTED" | "INTERNAL_ERROR";
+                        /** Format: uuid */
+                        correlationId: string;
+                        message: string;
+                    };
+                };
+            };
+            /** @description Default Response */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "INVALID_REQUEST" | "RATE_LIMITED" | "NOT_IMPLEMENTED" | "INTERNAL_ERROR";
+                        /** Format: uuid */
+                        correlationId: string;
+                        message: string;
+                    };
+                };
+            };
+            /** @description Default Response */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "INVALID_REQUEST" | "RATE_LIMITED" | "NOT_IMPLEMENTED" | "INTERNAL_ERROR";
+                        /** Format: uuid */
+                        correlationId: string;
+                        message: string;
+                    };
+                };
+            };
+            /** @description Default Response */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "INVALID_REQUEST" | "RATE_LIMITED" | "NOT_IMPLEMENTED" | "INTERNAL_ERROR";
+                        /** Format: uuid */
+                        correlationId: string;
+                        message: string;
+                    };
+                };
+            };
+            /** @description Default Response */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "INVALID_REQUEST" | "RATE_LIMITED" | "NOT_IMPLEMENTED" | "INTERNAL_ERROR";
+                        /** Format: uuid */
+                        correlationId: string;
+                        message: string;
+                    };
+                };
+            };
+            /** @description Default Response */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "INVALID_REQUEST" | "RATE_LIMITED" | "NOT_IMPLEMENTED" | "INTERNAL_ERROR";
+                        /** Format: uuid */
+                        correlationId: string;
+                        message: string;
+                    };
+                };
+            };
+            /** @description Default Response */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "INVALID_REQUEST" | "RATE_LIMITED" | "NOT_IMPLEMENTED" | "INTERNAL_ERROR";
+                        /** Format: uuid */
+                        correlationId: string;
+                        message: string;
+                    };
+                };
+            };
+            /** @description Default Response */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "INVALID_REQUEST" | "RATE_LIMITED" | "NOT_IMPLEMENTED" | "INTERNAL_ERROR";
+                        /** Format: uuid */
+                        correlationId: string;
+                        message: string;
+                    };
+                };
+            };
+            /** @description Default Response */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "INVALID_REQUEST" | "RATE_LIMITED" | "NOT_IMPLEMENTED" | "INTERNAL_ERROR";
+                        /** Format: uuid */
+                        correlationId: string;
+                        message: string;
+                    };
+                };
+            };
+        };
+    };
+    unlockChallengeWalkthrough: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        costApplied: number;
+                        forfeited: boolean;
+                        pointsAwarded: number | null;
+                        solved: boolean;
+                        unlockedHints: {
+                            bodyMd: string;
+                            costApplied: number;
+                            position: number;
+                        }[];
+                        walkthroughMd: string | null;
                     };
                 };
             };

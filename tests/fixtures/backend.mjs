@@ -318,7 +318,11 @@ export function createBackendFixture({
       return;
     }
     if (requestUrl.startsWith("/v1/challenges/")) {
-      if (requestUrl === "/v1/challenges/missing") {
+      if (requestUrl.endsWith("/content")) {
+        sendJson(response, 200, { briefingMd: "", objectives: [], learningOutcomes: [], references: [], hints: [], hasWalkthrough: false });
+      } else if (requestUrl.endsWith("/state") || requestUrl.endsWith("/unlock")) {
+        sendJson(response, 200, { solved: false, pointsAwarded: null, costApplied: 0, forfeited: false, unlockedHints: [], walkthroughMd: null });
+      } else if (requestUrl === "/v1/challenges/missing") {
         sendJson(response, 404, {
           code: "NOT_FOUND",
           message: "Challenge not found.",
