@@ -85,6 +85,18 @@ describe("backend BFF authentication adapter", () => {
     }
   });
 
+  it("sends the learner address only on the login request", async () => {
+    const login = await loginBackend({
+      email: "learner@example.test",
+      password: "correct-horse-battery-staple",
+    }, "203.0.113.9");
+    await resolveBackendSession(login.sessionToken);
+
+    const [loginRequest, sessionRequest] = fixture.requests().slice(-2);
+    expect(loginRequest?.headers["x-cyber-range-client-ip"]).toBe("203.0.113.9");
+    expect(sessionRequest?.headers["x-cyber-range-client-ip"]).toBeUndefined();
+  });
+
   it("maps upstream errors without exposing their message", async () => {
     fixture.setScenario("error");
 
