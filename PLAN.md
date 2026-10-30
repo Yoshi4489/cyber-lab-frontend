@@ -1,5 +1,22 @@
 # Development Plan: CiscoKU Lab
 
+## Harmless Welcome lab: Phase 4 control-plane isolation (October 30, 2026)
+
+The user approved Phase 4 after merging Phase 3. No frontend source changed:
+the BFF already derives identity only from the sealed session. The new
+`tests/e2e/welcome-isolation.spec.ts` runs two learners in separate browser
+contexts: distinct instances and target links; B's same-origin read, extend,
+stop and submit on A's instance each return `{ "code": "NOT_FOUND" }` without
+disclosing A's link; A stays running; stopping A removes its flag form and
+denies its submission while B keeps running and scores 10. The loopback
+fixture now returns the backend's full `{ code, message, correlationId }` error
+envelope in the Welcome scenario so BFF error mapping matches production.
+All 117 live Playwright cases and 130 unit tests passed.
+
+Real-container separation still needs the isolated VM; see the backend
+`docs/LOCAL_DEVELOPMENT.md` Phase 4 checklist. **Pause for that evidence and
+Phase 5 approval.**
+
 ## Harmless Welcome lab: Phase 3 implemented (October 30, 2026)
 
 The user approved Phase 3. Same-origin `GET /api/profile` (session-resolved,
