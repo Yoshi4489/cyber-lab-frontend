@@ -45,12 +45,12 @@ export type BackendResolvedSession =
  * Calls are for a future BFF route only. Login credentials and opaque backend
  * session tokens never become browser-visible state through this adapter.
  */
-export async function loginBackend(input: BackendLoginInput): Promise<BackendLogin> {
+export async function loginBackend(input: BackendLoginInput, clientIp?: string): Promise<BackendLogin> {
   const parsed = loginInputSchema.safeParse(input);
   if (!parsed.success) {
     throw new BackendAdapterError("Backend login input is invalid.");
   }
-  return postForJson("/v1/auth/login", parsed.data, loginSchema);
+  return postForJson("/v1/auth/login", parsed.data, loginSchema, clientIp);
 }
 
 export async function resolveBackendSession(
@@ -67,8 +67,10 @@ export async function logoutBackendSession(sessionToken: string): Promise<void> 
   return requestBackendNoContent("/v1/auth/logout", { method: "POST",
     authorization: bffAuthSecretFromEnvironment(), body: { sessionToken: validSessionToken(sessionToken) } });
 }
-async function postForJson<T>(path: string, body: object, schema: z.ZodType<T>): Promise<T> {
-  return requestBackendJson(path, schema, 200, { method: "POST", body, authorization: bffAuthSecretFromEnvironment() });
+async function postForJson<T>(path: string, body: object, schema: z.ZodType<T>, clientIp?: string): Promise<T> {
+  return requestBackendJson(path, schema, 200, {
+    method: "POST", body, authorization: bffAuthSecretFromEnvironment(), ...(clientIp ? { clientIp } : {}),
+  });
 }
 function bffAuthSecretFromEnvironment(): string {
   const parsed = bffConfigSchema.safeParse({
@@ -88,8 +90,8 @@ function validSessionToken(sessionToken: string): string {
   return parsed.data;
 }
 export async function authEmailOperation(operation: "verification/request" | "verification/confirm" | "password-reset/request" | "password-reset/confirm",
-  body: { email: string } | { token: string; newPassword?: string }): Promise<{ accepted: true } | undefined> {
-  const options = { method: "POST" as const, authorization: bffAuthSecretFromEnvironment(), body };
+  body: { email: string } | { token: string; newPassword?: string }, clientIp?: string): Promise<{ accepted: true } | undefined> {
+  const options = { method: "POST" as const, authorization: bffAuthSecretFromEnvironment(), body, ...(clientIp ? { clientIp } : {}) };
   const path = `/v1/auth/${operation}`;
   if (operation.endsWith("/request")) return requestBackendJson(path, z.object({ accepted: z.literal(true) }).strict(), 202, options);
   await requestBackendNoContent(path, options);

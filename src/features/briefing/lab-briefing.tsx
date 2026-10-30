@@ -26,7 +26,7 @@ export function LabBriefing({ lab }: { lab: LiveLab }) {
           <p>{welcome ? "Get to know your learning workspace with a simple Welcome page." : "Start your own instance. Submit a flag from a running lab to record a solve."}</p>
           {lab.kind === "web" ? <StartLab slug={lab.slug} label={welcome ? "Spawn Instance" : "Start Lab"} /> : <p>Shell lab access is not available in the current HTTP lifecycle.</p>}
           <small>One active instance per account. Initial lifetime: 60 minutes.</small>
-          <p className={styles.once}>{welcome ? "Flag submission is being prepared." : "Only the first correct solve awards points."}</p>
+          <p className={styles.once}>Only the first correct solve awards points.</p>
         </section>
         <section className={styles.skills}><h2>Skills in focus</h2><div>{lab.tags.map(tag => <span key={tag}>{tag}</span>)}</div></section>
       </aside>

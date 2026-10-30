@@ -1,0 +1,98 @@
+.flagForm {
+  display: grid;
+  gap: 10px;
+  margin-top: 26px;
+  padding-top: 22px;
+  border-top: 1px solid var(--border);
+}
+.flagForm label {
+  font-weight: 600;
+}
+.flagRow {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.flagRow > input {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+.help {
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+.correct {
+  color: var(--primary);
+}
+.incorrect {
+  color: var(--destructive, #e5484d);
+}
+.page {
+  max-width: 900px;
+  margin: 0 auto;
+}
+.page header {
+  margin-bottom: 26px;
+}
+.page h1 {
+  font-size: 36px;
+  letter-spacing: -1.2px;
+  margin: 12px 0;
+}
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 14px;
+  margin-bottom: 26px;
+}
+.stat {
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--card);
+}
+.stat span {
+  display: block;
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+.stat strong {
+  font-size: 28px;
+}
+.panel {
+  padding: 24px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--card);
+}
+.panel h2 {
+  font-size: 20px;
+  margin-bottom: 12px;
+}
+.scroll {
+  overflow-x: auto;
+}
+.panel table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.panel th,
+.panel td {
+  padding: 10px 8px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+.empty {
+  color: var(--muted-foreground);
+}
+.summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 22px;
+  align-items: center;
+  color: var(--muted-foreground);
+}
+.summary strong {
+  color: var(--foreground);
+}

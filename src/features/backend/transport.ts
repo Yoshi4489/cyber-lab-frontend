@@ -108,6 +108,8 @@ export type BackendRequestOptions = {
   method?: "GET" | "POST" | "DELETE";
   authorization?: string;
   idempotencyKey?: string;
+  /** Learner address for backend auth rate limits; sent only with BFF credentials. */
+  clientIp?: string;
   body?: object;
 };
 
@@ -139,6 +141,7 @@ async function requestBackend(path: string, options: BackendRequestOptions): Pro
   };
   if (options.authorization) headers.Authorization = `Bearer ${options.authorization}`;
   if (options.idempotencyKey) headers["Idempotency-Key"] = options.idempotencyKey;
+  if (options.clientIp) headers["X-Cyber-Range-Client-IP"] = options.clientIp;
   if (options.body) headers["Content-Type"] = "application/json";
   try {
     return await fetch(new URL(path, base), {

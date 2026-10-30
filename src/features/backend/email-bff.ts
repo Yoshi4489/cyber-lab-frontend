@@ -2,6 +2,7 @@ import "server-only";
 import { previewApiResponse } from "./frontend-mode";
 import { z } from "zod";
 import { authEmailOperation } from "./auth-adapter";
+import { learnerAddress } from "./client-address";
 import { assertSameOriginMutation, CsrfValidationError } from "./csrf";
 import { backendBffError, bffError, bffJson, bffNoContent } from "./bff-response";
 
@@ -20,7 +21,7 @@ export function emailRoute(operation: EmailOperation) {
       try { body = await request.json(); } catch { return bffError(400, "INVALID_REQUEST"); }
       const parsed = schema.safeParse(body);
       if (!parsed.success) return bffError(400, "INVALID_REQUEST");
-      const result = await authEmailOperation(operation, parsed.data);
+      const result = await authEmailOperation(operation, parsed.data, learnerAddress(request));
       return operation.endsWith("/request") ? bffJson(result, 202) : bffNoContent();
     } catch (error) {
       return error instanceof CsrfValidationError ? bffError(403, "FORBIDDEN") : backendBffError(error);

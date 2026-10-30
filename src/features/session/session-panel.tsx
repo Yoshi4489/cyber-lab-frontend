@@ -7,6 +7,7 @@ import { ApiError } from "@/features/backend/api-error";
 import { useAuth } from "@/features/auth/provider";
 import { formatCountdown, isActive, remainingMs, targetUrlFor } from "@/features/instances/client";
 import { useClock } from "@/hooks/use-clock";
+import { FlagForm } from "@/features/progress/flag-form";
 import { useInstance } from "./use-instance";
 import { StartLab } from "./start-lab";
 import styles from "./session.module.css";
@@ -58,7 +59,7 @@ function LiveSession({ lab }: { lab: LiveLab }) {
             <Button disabled={Boolean(busy) || coolingDown || !matches || instance.status !== "running" || timeLeft === 0 || Date.parse(instance.expiresAt) >= Date.parse(instance.absoluteExpiresAt)} onClick={() => void mutate("extend")}>{busy === "extend" ? "Extending…" : "Extend 30 minutes"}</Button>
             <Button variant="ghost" disabled={Boolean(busy) || coolingDown} onClick={() => void mutate("destroy")}>{busy === "destroy" ? "Stopping…" : "Stop Lab"}</Button>
           </div>}
-          {welcome && <p className={styles.notice}>Flag submission and account progress are being prepared. You can explore your Welcome page and manage its lifetime here.</p>}
+          {instance && matches && isActive(instance.status) && <FlagForm key={instance.id} challengeId={lab.id} instanceId={instance.id} enabled={instance.status === "running" && timeLeft > 0} />}
         </>}
     </section>
   </div>;

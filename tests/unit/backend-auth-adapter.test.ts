@@ -53,7 +53,7 @@ describe("backend BFF authentication adapter", () => {
     expect(session).toMatchObject({
       sessionId: "943eced9-5a8e-4160-80c5-ef9021aab53f",
       user: { id: "d7c932ea-e0ad-41bb-99e3-b4f9d0971e28", role: "player" },
-      allowedScopes: ["instances:read", "instances:write", "submissions:write"],
+      allowedScopes: ["instances:read", "instances:write", "submissions:write", "profile:read"],
     });
 
     const requests = fixture.requests().slice(-3);
@@ -83,6 +83,18 @@ describe("backend BFF authentication adapter", () => {
     for (const request of requests) {
       expect(request.body).not.toContain('"userId"');
     }
+  });
+
+  it("sends the learner address only on the login request", async () => {
+    const login = await loginBackend({
+      email: "learner@example.test",
+      password: "correct-horse-battery-staple",
+    }, "203.0.113.9");
+    await resolveBackendSession(login.sessionToken);
+
+    const [loginRequest, sessionRequest] = fixture.requests().slice(-2);
+    expect(loginRequest?.headers["x-cyber-range-client-ip"]).toBe("203.0.113.9");
+    expect(sessionRequest?.headers["x-cyber-range-client-ip"]).toBeUndefined();
   });
 
   it("maps upstream errors without exposing their message", async () => {

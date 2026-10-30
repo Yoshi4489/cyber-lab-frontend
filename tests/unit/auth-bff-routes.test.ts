@@ -70,8 +70,21 @@ describe("BFF authentication routes", () => {
     expect(mocks.loginBackend).toHaveBeenCalledWith({
       email: "learner@example.test",
       password: "correct-horse-battery-staple",
-    });
+    }, undefined);
     expect(mocks.setBackendSessionCookie).toHaveBeenCalledWith(rawCookieSession);
+  });
+
+  it("forwards the configured learner address for backend login rate limits", async () => {
+    const request = mutationRequest("/api/auth/login", {
+      email: "learner@example.test",
+      password: "correct-horse-battery-staple",
+    });
+    request.headers.set("X-Forwarded-For", "198.51.100.99, 203.0.113.5");
+    vi.stubEnv("TRUSTED_CLIENT_IP_HEADER", "x-forwarded-for");
+    try {
+      expect((await login(request)).status).toBe(200);
+    } finally { vi.unstubAllEnvs(); }
+    expect(mocks.loginBackend).toHaveBeenCalledWith(expect.any(Object), "203.0.113.5");
   });
 
   it("rejects missing origins and unexpected acting-user fields before login", async () => {

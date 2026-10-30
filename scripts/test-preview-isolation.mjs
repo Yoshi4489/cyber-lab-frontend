@@ -32,7 +32,7 @@ const endpoints = [
     .map(path => ["POST", `/api/auth/${path}`]),
   ["POST", "/api/instances"], ["GET", `/api/instances/${instanceId}`],
   ["DELETE", `/api/instances/${instanceId}`], ["POST", `/api/instances/${instanceId}/extend`],
-  ["POST", "/api/submissions"],
+  ["POST", "/api/submissions"], ["GET", "/api/profile"], ["GET", "/api/leaderboard"],
 ];
 let child;
 let browser;
