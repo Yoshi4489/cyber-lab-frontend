@@ -13,7 +13,7 @@ import styles from "./progress.module.css";
  * messages. The parent keys this form by session and instance, so changing
  * either (including sign-out) discards any typed value.
  */
-export function FlagForm({ challengeId, instanceId, enabled, onSolved }: { challengeId: string; instanceId: string; enabled: boolean; onSolved?: () => void }) {
+export function FlagForm({ challengeId, instanceId, enabled, onSolved }: { challengeId: string; instanceId?: string; enabled: boolean; onSolved?: () => void }) {
   const [flag, setFlag] = useState("");
   const [sending, setSending] = useState(false);
   const [result, setResult] = useState<FlagSubmission | null>(null);
@@ -26,7 +26,7 @@ export function FlagForm({ challengeId, instanceId, enabled, onSolved }: { chall
     inFlight.current = true;
     setSending(true); setResult(null); setError(null);
     // One deliberate attempt. An unknown outcome is never retried here.
-    const response = await submitFlag({ challengeId, instanceId, flag });
+    const response = await submitFlag({ challengeId, ...(instanceId ? { instanceId } : {}), flag });
     inFlight.current = false;
     setSending(false);
     if (response.ok) {
@@ -45,7 +45,7 @@ export function FlagForm({ challengeId, instanceId, enabled, onSolved }: { chall
         disabled={!enabled || sending} placeholder="Paste your flag" aria-describedby="lab-flag-help" />
       <Button type="submit" disabled={!enabled || sending || flag.trim().length === 0}>{sending ? "Checking…" : "Submit flag"}</Button>
     </div>
-    <p id="lab-flag-help" className={styles.help}>{enabled ? "Enter the flag you recovered from your page. Surrounding spaces are ignored; letters must match exactly." : "Flag submission is available while your instance is running."}</p>
+    <p id="lab-flag-help" className={styles.help}>{enabled ? "Enter the flag you recovered. Surrounding spaces are ignored; letters must match exactly." : "Flag submission is available while your instance is running."}</p>
     {result && <p role="status" data-testid="flag-result" className={result.correct ? styles.correct : styles.incorrect}>
       {!result.correct ? "That flag is not correct. Check it and try again."
         : result.points > 0 ? `Correct! You earned ${result.points} points.`

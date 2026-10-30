@@ -63,7 +63,7 @@ export function readLeaderboard(signal?: AbortSignal): Promise<ApiResult<LiveLea
  * unknown outcome may already be recorded, so they refresh persisted progress.
  */
 export function submitFlag(
-  input: { challengeId: string; instanceId: string; flag: string },
+  input: { challengeId: string; instanceId?: string; flag: string },
   signal?: AbortSignal,
 ): Promise<ApiResult<FlagSubmission>> {
   return requestBff("/api/submissions", submissionSchema, 200, {

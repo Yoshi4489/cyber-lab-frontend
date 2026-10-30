@@ -221,6 +221,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/challenges/{slug}/artifacts/{filename}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Requires profile:read. Returns the file as an attachment. */
+        get: operations["downloadChallengeArtifact"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/challenges/{slug}/content": {
         parameters: {
             query?: never;
@@ -399,7 +416,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Requires submissions:write and an owned running challenge instance. */
+        /** @description Requires submissions:write. Instance labs need an owned running instanceId; artifact challenges omit it. */
         post: operations["submitFlag"];
         delete?: never;
         options?: never;
@@ -2267,7 +2284,7 @@ export interface operations {
                             /** Format: uuid */
                             id: string;
                             /** @enum {string} */
-                            kind: "web" | "shell";
+                            kind: "web" | "shell" | "artifact";
                             points: number;
                             slug: string;
                             summary: string;
@@ -2440,13 +2457,171 @@ export interface operations {
                         /** Format: uuid */
                         id: string;
                         /** @enum {string} */
-                        kind: "web" | "shell";
+                        kind: "web" | "shell" | "artifact";
                         points: number;
                         slug: string;
                         summary: string;
                         readonly tags: string[];
                         title: string;
                     };
+                };
+            };
+            /** @description Default Response */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "INVALID_REQUEST" | "RATE_LIMITED" | "NOT_IMPLEMENTED" | "INTERNAL_ERROR";
+                        /** Format: uuid */
+                        correlationId: string;
+                        message: string;
+                    };
+                };
+            };
+            /** @description Default Response */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "INVALID_REQUEST" | "RATE_LIMITED" | "NOT_IMPLEMENTED" | "INTERNAL_ERROR";
+                        /** Format: uuid */
+                        correlationId: string;
+                        message: string;
+                    };
+                };
+            };
+            /** @description Default Response */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "INVALID_REQUEST" | "RATE_LIMITED" | "NOT_IMPLEMENTED" | "INTERNAL_ERROR";
+                        /** Format: uuid */
+                        correlationId: string;
+                        message: string;
+                    };
+                };
+            };
+            /** @description Default Response */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "INVALID_REQUEST" | "RATE_LIMITED" | "NOT_IMPLEMENTED" | "INTERNAL_ERROR";
+                        /** Format: uuid */
+                        correlationId: string;
+                        message: string;
+                    };
+                };
+            };
+            /** @description Default Response */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "INVALID_REQUEST" | "RATE_LIMITED" | "NOT_IMPLEMENTED" | "INTERNAL_ERROR";
+                        /** Format: uuid */
+                        correlationId: string;
+                        message: string;
+                    };
+                };
+            };
+            /** @description Default Response */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "INVALID_REQUEST" | "RATE_LIMITED" | "NOT_IMPLEMENTED" | "INTERNAL_ERROR";
+                        /** Format: uuid */
+                        correlationId: string;
+                        message: string;
+                    };
+                };
+            };
+            /** @description Default Response */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "INVALID_REQUEST" | "RATE_LIMITED" | "NOT_IMPLEMENTED" | "INTERNAL_ERROR";
+                        /** Format: uuid */
+                        correlationId: string;
+                        message: string;
+                    };
+                };
+            };
+            /** @description Default Response */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "INVALID_REQUEST" | "RATE_LIMITED" | "NOT_IMPLEMENTED" | "INTERNAL_ERROR";
+                        /** Format: uuid */
+                        correlationId: string;
+                        message: string;
+                    };
+                };
+            };
+            /** @description Default Response */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "INVALID_REQUEST" | "RATE_LIMITED" | "NOT_IMPLEMENTED" | "INTERNAL_ERROR";
+                        /** Format: uuid */
+                        correlationId: string;
+                        message: string;
+                    };
+                };
+            };
+        };
+    };
+    downloadChallengeArtifact: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                filename: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The file, as application/octet-stream. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             /** @description Default Response */
@@ -2604,6 +2779,11 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        artifacts: {
+                            filename: string;
+                            sha256: string;
+                            sizeBytes: number;
+                        }[];
                         briefingMd: string;
                         hasWalkthrough: boolean;
                         hints: {
@@ -4567,7 +4747,7 @@ export interface operations {
                     challengeId: string;
                     flag: string;
                     /** Format: uuid */
-                    instanceId: string;
+                    instanceId?: string;
                 };
             };
         };

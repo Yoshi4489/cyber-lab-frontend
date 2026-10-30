@@ -4,7 +4,7 @@ export type Challenge = operations["getChallenge"]["responses"][200]["content"][
 export const challengeSchema: z.ZodType<Challenge> = z.object({
   id: z.uuid(), slug: z.string(), title: z.string(), summary: z.string(), category: z.string(),
   difficulty: z.enum(["easy", "medium", "hard"]), points: z.number().int().nonnegative(),
-  kind: z.enum(["web", "shell"]), tags: z.array(z.string()),
+  kind: z.enum(["web", "shell", "artifact"]), tags: z.array(z.string()),
 }).strict();
 export const categoriesSchema = z.object({ categories: z.array(z.string()) }).strict();
 export const challengesSchema = z.object({ challenges: z.array(challengeSchema), source: z.literal("database") }).strict();
@@ -16,6 +16,7 @@ export const challengeContentSchema: z.ZodType<ChallengeContent> = z.object({
   references: z.array(z.object({ label: z.string(), url: z.string().optional() }).strict()),
   hints: z.array(z.object({ position: z.number().int().positive(), cost: z.number().int().nonnegative() }).strict()),
   hasWalkthrough: z.boolean(),
+  artifacts: z.array(z.object({ filename: z.string(), sizeBytes: z.number().int().nonnegative(), sha256: z.string() }).strict()),
 }).strict();
 export const playerChallengeStateSchema: z.ZodType<PlayerChallengeState> = z.object({
   solved: z.boolean(), pointsAwarded: z.number().int().nonnegative().nullable(),

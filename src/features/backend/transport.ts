@@ -134,6 +134,13 @@ export async function requestBackendNoContent(path: string, options: BackendRequ
   if (response.status !== 204) throw new BackendResponseError();
 }
 
+export async function requestBackendBytes(path: string, options: BackendRequestOptions): Promise<ArrayBuffer> {
+  const response = await requestBackend(path, options);
+  if (!response.ok) throw await backendHttpError(response);
+  if (response.status !== 200) throw new BackendResponseError();
+  try { return await response.arrayBuffer(); } catch { throw new BackendUnavailableError(); }
+}
+
 async function requestBackend(path: string, options: BackendRequestOptions): Promise<Response> {
   const base = getBackendBaseUrl();
   const headers: Record<string, string> = {

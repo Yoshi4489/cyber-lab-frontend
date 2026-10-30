@@ -10,14 +10,14 @@ import { CsrfValidationError } from "./csrf";
 const submissionSchema = z
   .object({
     challengeId: z.uuid(),
-    instanceId: z.uuid(),
+    instanceId: z.uuid().optional(),
     flag: z.string().min(1).max(256),
   })
   .strict();
 
 export async function readSubmissionInput(
   request: Request,
-): Promise<{ challengeId: string; instanceId: string; flag: string } | null> {
+): Promise<{ challengeId: string; instanceId?: string | undefined; flag: string } | null> {
   if (request.headers.get("content-type")?.split(";", 1)[0] !== "application/json") {
     return null;
   }

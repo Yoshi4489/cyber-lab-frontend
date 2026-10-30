@@ -319,7 +319,7 @@ export function createBackendFixture({
     }
     if (requestUrl.startsWith("/v1/challenges/")) {
       if (requestUrl.endsWith("/content")) {
-        sendJson(response, 200, { briefingMd: "", objectives: [], learningOutcomes: [], references: [], hints: [], hasWalkthrough: false });
+        sendJson(response, 200, { briefingMd: "", objectives: [], learningOutcomes: [], references: [], hints: [], hasWalkthrough: false, artifacts: [] });
       } else if (requestUrl.endsWith("/state") || requestUrl.endsWith("/unlock")) {
         sendJson(response, 200, { solved: false, pointsAwarded: null, costApplied: 0, forfeited: false, unlockedHints: [], walkthroughMd: null });
       } else if (requestUrl === "/v1/challenges/missing") {

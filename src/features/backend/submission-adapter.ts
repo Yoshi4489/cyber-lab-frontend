@@ -10,7 +10,7 @@ const submissionInputSchema = z
       .max(8192)
       .regex(/^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/),
     challengeId: z.uuid(),
-    instanceId: z.uuid(),
+    instanceId: z.uuid().optional(),
     flag: z.string().min(1).max(256),
   })
   .strict();
@@ -33,7 +33,7 @@ export type BackendFlagSubmission =
 export async function submitBackendFlag(input: {
   serviceToken: string;
   challengeId: string;
-  instanceId: string;
+  instanceId?: string | undefined;
   flag: string;
 }): Promise<BackendFlagSubmission> {
   const parsed = submissionInputSchema.safeParse(input);
@@ -43,6 +43,6 @@ export async function submitBackendFlag(input: {
 
   const { serviceToken, challengeId, instanceId, flag } = parsed.data;
   return requestBackendJson("/v1/submissions", submissionResultSchema, 200, {
-    method: "POST", authorization: serviceToken, body: { challengeId, instanceId, flag },
+    method: "POST", authorization: serviceToken, body: { challengeId, ...(instanceId ? { instanceId } : {}), flag },
   });
 }
