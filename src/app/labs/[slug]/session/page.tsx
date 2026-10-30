@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { BackendHttpError } from "@/features/backend/adapter";
 import { ReadError } from "@/features/backend/read-error";
 import { readChallenge, readChallengeContent } from "@/features/catalog/server";
@@ -23,5 +23,6 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
       ...(error instanceof BackendHttpError && error.correlationId ? { correlationId: error.correlationId } : {}) }} />;
   }
   if (challenge.slug !== slug) notFound();
+  if (challenge.kind === "artifact") redirect(`/labs/${slug}`);
   return <SessionPanel lab={toLiveLab(challenge)} content={content} />;
 }
