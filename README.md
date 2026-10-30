@@ -149,6 +149,7 @@ in the host's secret manager (never in `NEXT_PUBLIC_*` variables):
 | `BFF_AUTH_SECRET` | Shared backend bootstrap credential for login, session resolution, and logout. |
 | `BFF_SESSION_SECRET` | Independent frontend-only secret, at least 32 characters, used to encrypt the HttpOnly cookie value. Rotating it invalidates browser sessions. |
 | `BACKEND_SERVICE_TOKEN_SECRET`, `SERVICE_TOKEN_ISSUER`, `SERVICE_TOKEN_AUDIENCE` | Separate configuration for short-lived, scoped lifecycle and submission tokens. |
+| `TRUSTED_CLIENT_IP_HEADER` | Optional. Name of a header your own proxy or host platform overwrites with the learner's IP (for example `x-real-ip`, or `x-forwarded-for` behind an appending proxy; the rightmost entry is used). The BFF forwards that address so backend login, verification and reset limits apply per learner. Unset forwards nothing and the backend keeps one shared limit. Never name a header browsers can set unchecked: Next.js passes `X-Forwarded-For` through unchanged. |
 | `LIVE_INSTANCE_UI` | Optional. `true` exposes the operator instance-control surface at `/instances`. Server-only, so the browser cannot reveal it; unset returns `404`. |
 
 See [`.env.example`](.env.example) for names only. Do not add a real `.env`
