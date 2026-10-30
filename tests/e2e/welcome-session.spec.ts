@@ -245,7 +245,7 @@ test("Welcome scores the shown flag once and live progress reflects it", async (
 
   await field.fill(flag);
   await submit.click();
-  await expect(page.getByTestId("flag-result")).toHaveText("Correct. You have already solved this lab, so no extra points were added.");
+  await expect(page.getByTestId("flag-result")).toHaveText("Correct. No points were added, because you already solved this lab or opened its walkthrough first.");
   expect(submissions).toEqual(["POST", "POST", "POST"]);
   expect(page.url()).not.toContain("FLAG");
   const stored = await page.evaluate(() => JSON.stringify({ ...localStorage }) + JSON.stringify({ ...sessionStorage }));

@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { useState } from "react";
 import { ArrowLeft, Clock3, FlaskConical } from "lucide-react";
 import { isWelcome, type LiveLab } from "@/features/catalog/live";
 import { Button } from "@/components/ui/button";
@@ -8,14 +9,17 @@ import { useAuth } from "@/features/auth/provider";
 import { formatCountdown, isActive, remainingMs, targetUrlFor } from "@/features/instances/client";
 import { useClock } from "@/hooks/use-clock";
 import { FlagForm } from "@/features/progress/flag-form";
+import { LabGuidance } from "@/features/briefing/lab-guidance";
+import type { ChallengeContent } from "@/features/backend/catalog-schemas";
 import { useInstance } from "./use-instance";
 import { StartLab } from "./start-lab";
 import styles from "./session.module.css";
-export function SessionPanel({ lab }: { lab: LiveLab }) {
+export function SessionPanel({ lab, content }: { lab: LiveLab; content: ChallengeContent }) {
   const { sessionEpoch } = useAuth();
-  return <LiveSession key={`${sessionEpoch}:${lab.id}`} lab={lab} />;
+  return <LiveSession key={`${sessionEpoch}:${lab.id}`} lab={lab} content={content} />;
 }
-function LiveSession({ lab }: { lab: LiveLab }) {
+function LiveSession({ lab, content }: { lab: LiveLab; content: ChallengeContent }) {
+  const [solves, setSolves] = useState(0);
   const { session, loading, error: authError, refresh } = useAuth();
   const { instance, error, restoring, busy, storageWarning, mutate, retry, retryAt } = useInstance(lab.id);
   const now = useClock();
@@ -59,8 +63,9 @@ function LiveSession({ lab }: { lab: LiveLab }) {
             <Button disabled={Boolean(busy) || coolingDown || !matches || instance.status !== "running" || timeLeft === 0 || Date.parse(instance.expiresAt) >= Date.parse(instance.absoluteExpiresAt)} onClick={() => void mutate("extend")}>{busy === "extend" ? "Extending…" : "Extend 30 minutes"}</Button>
             <Button variant="ghost" disabled={Boolean(busy) || coolingDown} onClick={() => void mutate("destroy")}>{busy === "destroy" ? "Stopping…" : "Stop Lab"}</Button>
           </div>}
-          {instance && matches && isActive(instance.status) && <FlagForm key={instance.id} challengeId={lab.id} instanceId={instance.id} enabled={instance.status === "running" && timeLeft > 0} />}
+          {instance && matches && isActive(instance.status) && <FlagForm key={instance.id} challengeId={lab.id} instanceId={instance.id} enabled={instance.status === "running" && timeLeft > 0} onSolved={() => setSolves(count => count + 1)} />}
         </>}
     </section>
+    <LabGuidance key={solves} slug={lab.slug} content={content} />
   </div>;
 }
