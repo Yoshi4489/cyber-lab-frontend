@@ -9,23 +9,19 @@ A hands-on security training platform. Users browse a catalog of deliberately
 vulnerable challenges, spawn a private isolated target on demand, attack it,
 and submit a flag to score points. Comparable to HackTheBox or TryHackMe.
 
-Status: the CiscoKU Lab frontend uses Next.js App Router at the repository root.
-The default is a fully isolated preview: username-only entry, 12 validated
-sample labs, and simulated lifecycle/completion with once-only local rewards.
-Server-only `FRONTEND_MODE=live` retains the existing BFF auth, database catalog,
-and instance controls. Preview returns 404 for all backend-facing API handlers
-before cookies, credentials, or upstream requests. Demo sessions use generated
-DTOs, one active session, a saved 60-minute expiry, 30-minute extensions and a
-two-hour cap. Version 1 learner state migrates identity/completions while dropping
-old sessions. Dashboard, read-only preview Profile and fictional rankings share
-one validated local progress selector, completed-lab lists and illustrative
-milestones. Recommendations prefer unfinished samples; Learning Paths remains
-a preview. Live Profile, rankings and Welcome flag submission read and write persisted backend progress. Backend lifecycle
-and cleanup acceptance are tracked separately in the sibling repository.
-Read the current delivery checkpoint in `PLAN.md` before future phases.
+Status: the CiscoKU Lab frontend is a Next.js App Router app at the repository
+root with two modes chosen only by server configuration. **Preview** (the
+default) is a username-only demo with 12 sample labs, simulated sessions and
+browser-local progress; every backend-facing API route returns 404 before
+reading cookies, credentials or the network. **Live** (`FRONTEND_MODE=live`)
+uses the server-side BFF for real accounts, the database catalog, instance
+spawn/poll/extend/stop, flag submission, and persisted Profile, Leaderboard and
+home progress. The harmless Welcome test lab is the only live lab; nothing is
+publicly launched. Read `PLAN.md` for the current state and next steps;
+`docs/PLAN_HISTORY.md` keeps the dated log.
 
 This is the **frontend repository**. The independent backend is in the sibling
-`../cyber-range-backend` repository. Do not add an orchestrator, Docker access,
+`../cyber-lab-backend` repository. Do not add an orchestrator, Docker access,
 or application database migrations to this frontend.
 
 ## The one fact that changes how you work on this
@@ -48,8 +44,9 @@ Two rules follow, and they are not negotiable:
    private-network reachability, hard resource caps, short TTL, disposable
    hosts.
 
-`SECURITY.md` is the long form and is required reading before touching
-anything in `apps/orchestrator` or `infra/`.
+`SECURITY.md` is the long form and is required reading before touching the
+BFF, session, instance or submission code in `src/features/backend` and
+`src/app/api`.
 
 ## Map
 
@@ -61,7 +58,7 @@ anything in `apps/orchestrator` or `infra/`.
 | `src/features/catalog/data.ts` | Typed editorial preview data. | Public sample content |
 | `src/features/backend/adapter.ts` | Server-only HTTP adapter. | Trusted, unprivileged |
 | `tests/` | Browser flows and loopback-only backend fixture. | Development only |
-| `../cyber-range-backend` | Separate API, persistence, and lifecycle repo. | Trusted; worker privileged |
+| `../cyber-lab-backend` | Separate API, persistence, and lifecycle repo. | Trusted; worker privileged |
 | `challenges/` | Challenge-as-code. One folder each. | Hostile by design |
 
 The orchestrator is the only component holding Docker Engine API credentials,
@@ -71,23 +68,25 @@ in the backend. Empty legacy monorepo directories are not application roots.
 
 ## Stack
 
-Matches `financial-dashboard` deliberately, so patterns carry over: Next.js 16
-App Router, TypeScript, Tailwind, shadcn/ui, Drizzle on Neon Postgres, Better
-Auth, React Hook Form with Zod, Vitest and Playwright.
-
-The frontend currently uses Next.js, React, TypeScript, Tailwind, local Geist
-fonts, shadcn-style source components with Radix primitives, and Playwright.
-Backend authentication is integrated through the frontend BFF; real scoring,
-profile and progress UI integration are still planned. Fastify, BullMQ on Redis,
-Dockerode, and Traefik belong to the separate backend and lab infrastructure.
+Next.js 16 App Router, React, TypeScript, Tailwind, local Geist fonts,
+shadcn-style source components with Radix primitives, Zod, `jose` for
+service tokens, Vitest and Playwright. There is no database, ORM or auth
+library in this repository: accounts, sessions, scoring and lifecycle live in
+the backend, reached only through the server-side BFF in
+`src/features/backend` and `src/app/api`. Fastify, BullMQ on Redis, Dockerode
+and Traefik belong to the backend and lab infrastructure.
 
 Keep route files thin. Place components, state, and CSS modules with their feature.
 Shared tokens and primitives belong in `src/styles`; avoid another global stylesheet
 that holds every feature. Demo state never authorizes backend operations.
 
-Run `npm run lint`, `npm run typecheck`, and `npm run build` for frontend
-changes. For navigation, filtering, storage, or API boundary changes, also run
-`npm run test:e2e` after building. Preview boundary changes also require
+Run `npm run lint`, `npm run typecheck`, `npm run test:unit` and
+`npm run build` for frontend changes.
+For navigation, filtering, storage, or API boundary changes, also run
+`npm run test:bff` and `npm run test:e2e` after building (`test:e2e` runs the
+preview suite and the live suite against the loopback backend fixture in
+`tests/fixtures/backend.mjs`; keep that fixture's responses identical in shape
+to the real backend's). Preview boundary changes also require
 `npm run test:preview-isolation` after building and installing Chromium; this
 checks a reachable upstream tripwire as well as browser calls and old cookies.
 CI runs these gates for each pushed group on
@@ -101,7 +100,8 @@ document rather than adding a new top-level guide.
 
 * `README.md` — what the project is, repo map.
 * `AGENTS.md` — this file. Context and conventions.
-* `PLAN.md` — phases, schema, capacity. The build order.
+* `PLAN.md` — current state, next steps and pending decisions.
+* `docs/PLAN_HISTORY.md` — dated delivery log and the original platform plan.
 * `ARCHITECTURE.md` — trust zones, instance lifecycle, flag model, API contract.
 * `SECURITY.md` — threat model and the controls that answer it.
 * `docs/challenge-authoring.md` — how to author and ship a challenge.
@@ -110,8 +110,8 @@ document rather than adding a new top-level guide.
 
 ## Working rules
 
-**Do not open public signups before Phase 3 finishes.** Every control marked
-required in `SECURITY.md` blocks launch. None of them are polish.
+**Do not open public signups before the backend security gate passes.** Every
+control marked required in `SECURITY.md` blocks launch. None of them are polish.
 
 **Never bake a flag into an image.** Images are cached, pushed, and pullable.
 Flags are injected at runtime, which is also what makes per-user dynamic flags
@@ -121,8 +121,10 @@ work.
 There is no challenge design that justifies either. If a concept seems to need
 it, the concept belongs on a microVM in Phase 6, not on a shared kernel today.
 
-**The orchestrator reads the user id from the signed service token only.**
-Taking it from a request body is a straight authorization bypass.
+**Identity never comes from the browser.** The BFF resolves the sealed session
+server-side and mints a scoped service token; the backend reads the user id
+from that token only. Taking it from a request body is a straight
+authorization bypass.
 
 **Pin images by digest.** A challenge that builds differently next month is a
 challenge whose solve script breaks at three in the morning.

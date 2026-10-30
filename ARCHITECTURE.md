@@ -25,7 +25,7 @@ are complete; Phase 3 submission/persistence awaits approval.**
 The approved specification is in the backend's [API contract](../cyber-range-backend/docs/API.md).
 It supersedes the older frontend-only assumptions about Better Auth, database
 ownership, lifecycle states, quotas, routing, flag storage, and missing backend
-implementation. `PLAN.md` retains historical delivery evidence, not a second API
+implementation. `docs/PLAN_HISTORY.md` retains historical delivery evidence, not a second API
 contract.
 
 The approved replacement milestone uses a static Welcome target, real BFF
