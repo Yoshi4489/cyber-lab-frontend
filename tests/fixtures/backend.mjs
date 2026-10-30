@@ -170,18 +170,18 @@ export function createBackendFixture({
         const create = request.method === "POST" && requestUrl === "/v1/instances";
         const id = create ? null : requestUrl.split("/")[3];
         let owned = id ? welcomeInstances.get(id) : null;
-        if (!create && (!owned || owned.owner !== actor)) { sendJson(response, 404, { code: "NOT_FOUND", correlationId }); return; }
+        if (!create && (!owned || owned.owner !== actor)) { sendJson(response, 404, { code: "NOT_FOUND", message: "Fixture error.", correlationId }); return; }
         const operation = create ? "create" : request.method === "DELETE" ? "destroy" : "extend";
         const key = `${actor}:${operation}:${request.headers["idempotency-key"]}`;
         const fingerprint = create ? input?.challengeId : id;
         const previous = welcomeMutations.get(key);
         if (request.method !== "GET" && previous) {
-          if (previous.fingerprint !== fingerprint) { sendJson(response, 409, { code: "CONFLICT", correlationId }); return; }
+          if (previous.fingerprint !== fingerprint) { sendJson(response, 409, { code: "CONFLICT", message: "Fixture error.", correlationId }); return; }
           sendJson(response, 202, { instance: welcomeInstances.get(previous.instanceId).instance, operationId: previous.operationId, replayed: true }); return;
         }
         if (create) {
-          if (input?.challengeId !== welcomeChallenge.id) { sendJson(response, 404, { code: "NOT_FOUND", correlationId }); return; }
-          if ([...welcomeInstances.values()].some(value => value.owner === actor && ["pending", "provisioning", "running", "stopping"].includes(value.instance.status))) { sendJson(response, 409, { code: "CONFLICT", correlationId }); return; }
+          if (input?.challengeId !== welcomeChallenge.id) { sendJson(response, 404, { code: "NOT_FOUND", message: "Fixture error.", correlationId }); return; }
+          if ([...welcomeInstances.values()].some(value => value.owner === actor && ["pending", "provisioning", "running", "stopping"].includes(value.instance.status))) { sendJson(response, 409, { code: "CONFLICT", message: "Fixture error.", correlationId }); return; }
           const now = Date.now();
           owned = { owner: actor, instance: { ...pendingInstance, id: randomUUID(), challengeId: welcomeChallenge.id, createdAt: new Date(now).toISOString(), expiresAt: new Date(now + 3600000).toISOString(), absoluteExpiresAt: new Date(now + 7200000).toISOString() } };
           welcomeInstances.set(owned.instance.id, owned);
@@ -195,9 +195,9 @@ export function createBackendFixture({
           const withoutTarget = { ...owned.instance }; delete withoutTarget.url;
           if (["pending", "provisioning", "running"].includes(owned.instance.status)) owned.instance = { ...withoutTarget, status: "stopping" };
         } else if (request.method === "POST" && requestUrl.endsWith("/extend")) {
-          if (owned.instance.status !== "running" || Date.parse(owned.instance.expiresAt) <= Date.now()) { sendJson(response, 409, { code: "CONFLICT", correlationId }); return; }
+          if (owned.instance.status !== "running" || Date.parse(owned.instance.expiresAt) <= Date.now()) { sendJson(response, 409, { code: "CONFLICT", message: "Fixture error.", correlationId }); return; }
           owned.instance = { ...owned.instance, expiresAt: new Date(Math.min(Date.parse(owned.instance.expiresAt) + 1800000, Date.parse(owned.instance.absoluteExpiresAt))).toISOString() };
-        } else { sendJson(response, 404, { code: "NOT_FOUND", correlationId }); return; }
+        } else { sendJson(response, 404, { code: "NOT_FOUND", message: "Fixture error.", correlationId }); return; }
         const operationId = randomUUID();
         welcomeMutations.set(key, { instanceId: owned.instance.id, operationId, fingerprint });
         sendJson(response, 202, { instance: owned.instance, operationId, replayed: false }); return;
@@ -257,14 +257,14 @@ export function createBackendFixture({
     if (scenario.startsWith("welcome") && (requestUrl === "/v1/submissions" || requestUrl === "/v1/profile")) {
       const submission = request.method === "POST" && requestUrl === "/v1/submissions";
       const actor = await serviceActor(request, submission ? "submissions:write" : "profile:read", serviceToken, serviceTokenConfig, [...welcomeSessions.values()]);
-      if (!actor) { sendJson(response, 401, { code: "UNAUTHORIZED", correlationId }); return; }
+      if (!actor) { sendJson(response, 401, { code: "UNAUTHORIZED", message: "Fixture error.", correlationId }); return; }
       if (submission) {
         let input;
         try { input = JSON.parse(body); } catch { input = null; }
         const owned = welcomeInstances.get(input?.instanceId);
         // Mirrors the backend: owner, challenge match, running and unexpired.
         if (!owned || owned.owner !== actor || owned.instance.challengeId !== input?.challengeId || owned.instance.status !== "running" || Date.parse(owned.instance.expiresAt) <= Date.now()) {
-          sendJson(response, 404, { code: "NOT_FOUND", correlationId }); return;
+          sendJson(response, 404, { code: "NOT_FOUND", message: "Fixture error.", correlationId }); return;
         }
         const correct = typeof input.flag === "string" && input.flag.trim() === welcomeFlag;
         const first = correct && !welcomeSolves.has(actor);
