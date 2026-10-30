@@ -7,6 +7,7 @@ import {
   bffError,
 } from "../../../../features/backend/bff-response";
 import { setBackendSessionCookie } from "../../../../features/backend/bff-session";
+import { learnerAddress } from "../../../../features/backend/client-address";
 import {
   assertSameOriginMutation,
   CsrfValidationError,
@@ -27,7 +28,7 @@ export async function POST(request: Request): Promise<Response> {
     const input = await loginInput(request);
     if (!input) return bffError(400, "INVALID_REQUEST");
 
-    const session = await loginBackend(input);
+    const session = await loginBackend(input, learnerAddress(request));
     try {
       await setBackendSessionCookie({
         sessionToken: session.sessionToken,
