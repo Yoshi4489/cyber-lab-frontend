@@ -20,7 +20,7 @@ two-hour cap. Version 1 learner state migrates identity/completions while droppi
 old sessions. Dashboard, read-only preview Profile and fictional rankings share
 one validated local progress selector, completed-lab lists and illustrative
 milestones. Recommendations prefer unfinished samples; Learning Paths remains
-a preview. Live profile/progress integration remains pending. Backend lifecycle
+a preview. Live Profile, rankings and Welcome flag submission read and write persisted backend progress. Backend lifecycle
 and cleanup acceptance are tracked separately in the sibling repository.
 Read the current delivery checkpoint in `PLAN.md` before future phases.
 

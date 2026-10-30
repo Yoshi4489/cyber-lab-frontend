@@ -1,5 +1,27 @@
 # Development Plan: CiscoKU Lab
 
+## Harmless Welcome lab: Phase 3 implemented (October 30, 2026)
+
+The user approved Phase 3. Same-origin `GET /api/profile` (session-resolved,
+`profile:read` only) and public `GET /api/leaderboard` forward validated DTOs
+with no-store and return 404 in preview before any credential or upstream
+access. The live session offers flag submission only for its own running,
+unexpired instance; input is component state only, cleared on success, instance
+change and sign-out, and an unknown outcome is never retried automatically.
+Live Profile, Leaderboard and the signed-in home read persisted progress with
+explicit loading, empty, signed-out and error states and no demo values.
+
+Verification: lint, typecheck, build, 125 unit tests, BFF smoke, preview
+isolation (32 API 404s), 57 preview and 114 live Playwright cases across
+desktop/mobile/tablet passed. The loopback fixture mirrors the backend Welcome
+rules. A browser journey against the real backend API, a fresh seeded database
+and this built frontend also passed: incorrect, padded-correct (10 points) and
+concurrent repeats (0), cleared input, no flag in URL/storage, persisted
+profile/rankings, foreign/stopped/expired denial. The instance's running state
+was set in that disposable database; no target ran beside the control plane.
+See the backend `PLAN.md` for the shared auth rate-limit question.
+**Pause for Phase 4 approval.**
+
 ## Harmless Welcome lab: Phase 2 complete locally (October 26, 2026)
 
 The user replaced the Cookie Monster milestone with harmless end-to-end testing.
